@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\Frontend.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\Frontend.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\Frontend.csproj",
+        "projectName": "Frontend",
+        "projectPath": "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\Frontend.csproj",
+        "packagesPath": "C:\\Users\\FELHASZNALO\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\FELHASZNALO\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "OpenTK": {
+              "target": "Package",
+              "version": "[4.9.4, )"
+            },
+            "SDL3-CS": {
+              "target": "Package",
+              "version": "[3.4.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.313/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
