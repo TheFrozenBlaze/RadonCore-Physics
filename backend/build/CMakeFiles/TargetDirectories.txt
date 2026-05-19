@@ -1,3 +1,0 @@
-/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles/Radon.dir
-/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles/edit_cache.dir
-/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles/rebuild_cache.dir
