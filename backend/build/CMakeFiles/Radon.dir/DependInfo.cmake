@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/3dvfunc.cpp" "CMakeFiles/Radon.dir/src/3dvfunc.cpp.o" "gcc" "CMakeFiles/Radon.dir/src/3dvfunc.cpp.o.d"
-  "/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/main.cpp" "CMakeFiles/Radon.dir/src/main.cpp.o" "gcc" "CMakeFiles/Radon.dir/src/main.cpp.o.d"
+  "/home/matyas/Documents/3Dengine/backend/src/3dvfunc.cpp" "CMakeFiles/Radon.dir/src/3dvfunc.cpp.o" "gcc" "CMakeFiles/Radon.dir/src/3dvfunc.cpp.o.d"
+  "/home/matyas/Documents/3Dengine/backend/src/main.cpp" "CMakeFiles/Radon.dir/src/main.cpp.o" "gcc" "CMakeFiles/Radon.dir/src/main.cpp.o.d"
   "" "Radon" "gcc" "CMakeFiles/Radon.dir/link.d"
   )
 

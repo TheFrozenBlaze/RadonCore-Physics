@@ -1,5 +1,5 @@
 CMakeFiles/Radon.dir/src/3dvfunc.cpp.o: \
- /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/3dvfunc.cpp \
+ /home/matyas/Documents/3Dengine/backend/src/3dvfunc.cpp \
  /usr/include/stdc-predef.h /usr/include/c++/16.1.1/iostream \
  /usr/include/c++/16.1.1/bits/requires_hosted.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -192,11 +192,4 @@ CMakeFiles/Radon.dir/src/3dvfunc.cpp.o: \
  /usr/include/stdint.h /usr/include/bits/stdint-uintn.h \
  /usr/include/bits/stdint-least.h /usr/include/c++/16.1.1/array \
  /usr/include/c++/16.1.1/compare /usr/include/c++/16.1.1/utility \
- /usr/include/c++/16.1.1/bits/stl_relops.h /usr/include/c++/16.1.1/chrono \
- /usr/include/c++/16.1.1/bits/chrono.h /usr/include/c++/16.1.1/ratio \
- /usr/include/c++/16.1.1/ctime \
- /usr/include/c++/16.1.1/bits/parse_numbers.h \
- /usr/include/c++/16.1.1/thread /usr/include/c++/16.1.1/bits/std_thread.h \
- /usr/include/c++/16.1.1/bits/refwrap.h \
- /usr/include/c++/16.1.1/bits/unique_ptr.h \
- /usr/include/c++/16.1.1/bits/this_thread_sleep.h
+ /usr/include/c++/16.1.1/bits/stl_relops.h

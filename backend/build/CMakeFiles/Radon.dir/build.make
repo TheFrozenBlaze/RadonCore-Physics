@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend
+CMAKE_SOURCE_DIR = /home/matyas/Documents/3Dengine/backend
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build
+CMAKE_BINARY_DIR = /home/matyas/Documents/3Dengine/backend/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/Radon.dir/depend.make
@@ -73,32 +73,32 @@ CMakeFiles/Radon.dir/codegen:
 .PHONY : CMakeFiles/Radon.dir/codegen
 
 CMakeFiles/Radon.dir/src/main.cpp.o: CMakeFiles/Radon.dir/flags.make
-CMakeFiles/Radon.dir/src/main.cpp.o: /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/main.cpp
+CMakeFiles/Radon.dir/src/main.cpp.o: /home/matyas/Documents/3Dengine/backend/src/main.cpp
 CMakeFiles/Radon.dir/src/main.cpp.o: CMakeFiles/Radon.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/Radon.dir/src/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Radon.dir/src/main.cpp.o -MF CMakeFiles/Radon.dir/src/main.cpp.o.d -o CMakeFiles/Radon.dir/src/main.cpp.o -c /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/matyas/Documents/3Dengine/backend/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/Radon.dir/src/main.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Radon.dir/src/main.cpp.o -MF CMakeFiles/Radon.dir/src/main.cpp.o.d -o CMakeFiles/Radon.dir/src/main.cpp.o -c /home/matyas/Documents/3Dengine/backend/src/main.cpp
 
 CMakeFiles/Radon.dir/src/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Radon.dir/src/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/main.cpp > CMakeFiles/Radon.dir/src/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/matyas/Documents/3Dengine/backend/src/main.cpp > CMakeFiles/Radon.dir/src/main.cpp.i
 
 CMakeFiles/Radon.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Radon.dir/src/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/main.cpp -o CMakeFiles/Radon.dir/src/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/matyas/Documents/3Dengine/backend/src/main.cpp -o CMakeFiles/Radon.dir/src/main.cpp.s
 
 CMakeFiles/Radon.dir/src/3dvfunc.cpp.o: CMakeFiles/Radon.dir/flags.make
-CMakeFiles/Radon.dir/src/3dvfunc.cpp.o: /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/3dvfunc.cpp
+CMakeFiles/Radon.dir/src/3dvfunc.cpp.o: /home/matyas/Documents/3Dengine/backend/src/3dvfunc.cpp
 CMakeFiles/Radon.dir/src/3dvfunc.cpp.o: CMakeFiles/Radon.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/Radon.dir/src/3dvfunc.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Radon.dir/src/3dvfunc.cpp.o -MF CMakeFiles/Radon.dir/src/3dvfunc.cpp.o.d -o CMakeFiles/Radon.dir/src/3dvfunc.cpp.o -c /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/3dvfunc.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/matyas/Documents/3Dengine/backend/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/Radon.dir/src/3dvfunc.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Radon.dir/src/3dvfunc.cpp.o -MF CMakeFiles/Radon.dir/src/3dvfunc.cpp.o.d -o CMakeFiles/Radon.dir/src/3dvfunc.cpp.o -c /home/matyas/Documents/3Dengine/backend/src/3dvfunc.cpp
 
 CMakeFiles/Radon.dir/src/3dvfunc.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Radon.dir/src/3dvfunc.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/3dvfunc.cpp > CMakeFiles/Radon.dir/src/3dvfunc.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/matyas/Documents/3Dengine/backend/src/3dvfunc.cpp > CMakeFiles/Radon.dir/src/3dvfunc.cpp.i
 
 CMakeFiles/Radon.dir/src/3dvfunc.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Radon.dir/src/3dvfunc.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/3dvfunc.cpp -o CMakeFiles/Radon.dir/src/3dvfunc.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/matyas/Documents/3Dengine/backend/src/3dvfunc.cpp -o CMakeFiles/Radon.dir/src/3dvfunc.cpp.s
 
 # Object files for target Radon
 Radon_OBJECTS = \
@@ -113,7 +113,7 @@ Radon: CMakeFiles/Radon.dir/src/3dvfunc.cpp.o
 Radon: CMakeFiles/Radon.dir/build.make
 Radon: CMakeFiles/Radon.dir/compiler_depend.ts
 Radon: CMakeFiles/Radon.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable Radon"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/matyas/Documents/3Dengine/backend/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable Radon"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Radon.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -125,6 +125,6 @@ CMakeFiles/Radon.dir/clean:
 .PHONY : CMakeFiles/Radon.dir/clean
 
 CMakeFiles/Radon.dir/depend:
-	cd /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles/Radon.dir/DependInfo.cmake "--color=$(COLOR)" Radon
+	cd /home/matyas/Documents/3Dengine/backend/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/matyas/Documents/3Dengine/backend /home/matyas/Documents/3Dengine/backend /home/matyas/Documents/3Dengine/backend/build /home/matyas/Documents/3Dengine/backend/build /home/matyas/Documents/3Dengine/backend/build/CMakeFiles/Radon.dir/DependInfo.cmake "--color=$(COLOR)" Radon
 .PHONY : CMakeFiles/Radon.dir/depend
 

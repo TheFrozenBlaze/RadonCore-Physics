@@ -3,6 +3,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK;
 using SDL3;
 using Render;
+using import;
 
 class Initialize {
         class SDLBindingsContext : IBindingsContext
@@ -44,7 +45,15 @@ class Initialize {
             }
             bool running = true;
             SDL.Event e;
+            import.Import.LoadOBJ("/home/matyas/Downloads/humanoid_quad.obj");
 
+            unsafe {
+                IntPtr ptr = import.Import.Element(3);
+                
+                ulong count = import.Import.Size(2);
+                Console.WriteLine(count);
+                Console.WriteLine(ptr);
+            }
             while (running)
             {
                 while (SDL.PollEvent(out e) == true)
@@ -56,7 +65,7 @@ class Initialize {
                 Render.Objects.Context(w, h);
                 SDL.GLSwapWindow(Window);
             }
-
+            
             SDL.GLDestroyContext(glContext);
             SDL.DestroyWindow(Window);
             SDL.Quit();

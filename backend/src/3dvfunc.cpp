@@ -8,10 +8,10 @@
 #include <cstdint>
 #include <array>
 #include <utility>
-#include <chrono>
-#include <thread>
+//#include <chrono>
+//#include <thread>
 
-struct Coord {
+class Coord {
 public:
     //endpoint
     std::vector<float> xcoords;
@@ -47,6 +47,8 @@ public:
     };
 
     std::vector<Face> fvi;
+    
+    std::vector<std::vector<uint32_t>> intersections;
 };
 
 class Vector {
@@ -309,21 +311,17 @@ public:
     /*this would be good if this was either 2d, or 3d with simple objects like cubes or whatever*/
 
     void AABB(uint32_t vecnum) {
-
-
-        for(size_t i = 0; i < cs.fvi.size(); i++) {
+        for(size_t i = 0; i < cs.triangles.size(); i++) {
             std::vector<float> temporaryx;
             std::vector<float> temporaryz;
             std::vector<float> temporaryy;
-            for(size_t j = 0; j < cs.fvi[i].ver.size(); j++) {
-                temporaryx.emplace_back(cs.vxc[cs.fvi[i].ver[j].v-1]);
-                temporaryy.emplace_back(cs.vyc[cs.fvi[i].ver[j].v-1]);
-                temporaryz.emplace_back(cs.vzc[cs.fvi[i].ver[j].v-1]);
-            }
+            
+            temporaryx = {cs.vxc[cs.triangles[i][0]], cs.vxc[cs.triangles[i][1]], cs.vxc[cs.triangles[i][2]]};
+            temporaryy = {cs.vyc[cs.triangles[i][0]], cs.vyc[cs.triangles[i][1]], cs.vyc[cs.triangles[i][2]]};
+            temporaryz = {cs.vzc[cs.triangles[i][0]], cs.vzc[cs.triangles[i][1]], cs.vzc[cs.triangles[i][2]]};
             auto mmx = std::minmax_element(temporaryx.begin(), temporaryx.end());
             auto mmy = std::minmax_element(temporaryy.begin(), temporaryy.end());
             auto mmz = std::minmax_element(temporaryz.begin(), temporaryz.end());
-            float temp;
             float xmin = *mmx.first, xmax = *mmx.second;
             float ymin = *mmy.first, ymax = *mmy.second;
             float zmin = *mmz.first, zmax = *mmz.second;
@@ -342,6 +340,7 @@ public:
             cs.usable.push_back(i);
         }
     };
+    
     //I would like to give credits and a huge thanks to 3Blue1Brown, who has thought me the essence of algebra, and who thought me how to think in 3D.
     //Without his series creating this function would have been a much more excruciating process, and I would have probably never finished it, so thank you 3Blue1Brown! 
     void Triangulator() {
@@ -402,7 +401,7 @@ public:
                             }   size_t r;
                                 v0 = cs.fvi[i].ver[vindices[k]].v-1;
                                 v1 = cs.fvi[i].ver[vindices[(k+1) % vindices.size()]].v-1;
-                                v2 = v2 = cs.fvi[i].ver[vindices[(k+2) % vindices.size()]].v - 1;//(k+2) % vindices.size() is good, because it allws us to loop around, because this gives us the modulo, and at k+2 = vindices.size() it becomes 0, etc.
+                                v2 = cs.fvi[i].ver[vindices[(k+2) % vindices.size()]].v - 1;//(k+2) % vindices.size() is good, because it allws us to loop around, because this gives us the modulo, and at k+2 = vindices.size() it becomes 0, etc.
                                 //we are chhosing the points of the potential triangle
                                 std::array<float, 2>rv1 = {cs.vyc[v1] - cs.vyc[v0],cs.vzc[v1] - cs.vzc[v0]};
                                 std::array<float, 2>rv2 = {cs.vyc[v2] - cs.vyc[v0],cs.vzc[v2] - cs.vzc[v0]};
@@ -497,7 +496,7 @@ public:
                             }   size_t r;
                                 v0 = cs.fvi[i].ver[vindices[k]].v-1;
                                 v1 = cs.fvi[i].ver[vindices[(k+1) % vindices.size()]].v-1;
-                                v2 = v2 = cs.fvi[i].ver[vindices[(k+2) % vindices.size()]].v - 1;
+                                v2 = cs.fvi[i].ver[vindices[(k+2) % vindices.size()]].v - 1;
                                 
                                 std::array<float, 2>rv1 = {cs.vxc[v1] - cs.vxc[v0],cs.vzc[v1] - cs.vzc[v0]};
                                 std::array<float, 2>rv2 = {cs.vxc[v2] - cs.vxc[v0],cs.vzc[v2] - cs.vzc[v0]};
@@ -641,7 +640,7 @@ public:
                                             cs.triangles.emplace_back(std::array<long unsigned int, 3>{v0, v1, v2});
                                             vindices.erase(vindices.begin() + (k+1) % vindices.size());
                                             //std::cout<< "face valid" << std::endl;
-                                            //std::cout << "I have removed: " << v1+1 << std::endl;
+                                            //std::cout k++;<< "I have removed: " << v1+1 << std::endl;
                                             //std::cout << "Triangle "<<cs.triangles[cs.triangles.size()-1][0] << " " << cs.triangles[cs.triangles.size()-1][1] << " "<< cs.triangles[cs.triangles.size()-1][2]<< std::endl;                                            removed = true;
                                             k = 0;
                                         }
@@ -664,9 +663,103 @@ public:
                 continue;
             }
         }  
-    };
+    }
+    void MoellerTrumbore(uint32_t vecnum) {
+        AABB(vecnum);
+        float facedotprod;
+        cs.intersections.resize(cs.intersections.size() +1);
+        cs.intersections.back().emplace_back(vecnum); 
+        for(size_t i = 0; i < cs.usable.size(); i++) {
+            size_t j = cs.usable[i];
+            std::array<float, 3> v0 = {cs.vxc[cs.triangles[j][0]]- cs.stpxcoords[vecnum], cs.vyc[cs.triangles[j][0]] - cs.stpycoords[vecnum], cs.vzc[cs.triangles[j][0]] - cs.stpzcoords[vecnum]};
+            std::array<float, 3> v1 = {cs.vxc[cs.triangles[j][1]]- cs.stpxcoords[vecnum], cs.vyc[cs.triangles[j][1]] - cs.stpycoords[vecnum], cs.vzc[cs.triangles[j][1]] - cs.stpzcoords[vecnum]};
+            std::array<float, 3> v2 = {cs.vxc[cs.triangles[j][2]]- cs.stpxcoords[vecnum], cs.vyc[cs.triangles[j][2]] - cs.stpycoords[vecnum], cs.vzc[cs.triangles[j][2]] - cs.stpzcoords[vecnum]};
+            std::array<float, 3> edge1 = {v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]};
+            std::array<float, 3> edge2 = {v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]};
+            std::array<float, 3> normal =   {edge2[2] * edge1[1] - edge2[1] * edge1[2],
+                                             edge2[0] * edge1[2] - edge2[2] * edge1[0],
+                                             edge2[1] * edge1[0] - edge2[0] * edge1[1]};
+            facedotprod = (cs.xcoords[vecnum] - cs.stpxcoords[vecnum])* normal[0] + (cs.ycoords[vecnum] - cs.stpycoords[vecnum]) * normal[1] + (cs.zcoords[vecnum] - cs.stpzcoords[vecnum]) * normal[2];
+            if (std::fabs(facedotprod) < 1e-6) continue; // Ray is parallel to triangle
+            float t = -(-(normal[0]*v0[0] + normal[1]*v0[1] + normal[2]*v0[2]))/(normal[0]*(cs.xcoords[vecnum] - cs.stpxcoords[vecnum]) + normal[1]*(cs.ycoords[vecnum] - cs.stpycoords[vecnum]) + normal[2]*(cs.zcoords[vecnum] - cs.stpzcoords[vecnum]));
+            if(t < 0 || t > 1) {
+                std::cerr << "Vector meets the plane outside \n"; 
+                continue;
+            }
+            std::array<float, 3> P = {t*(cs.xcoords[vecnum] - cs.stpxcoords[vecnum]), t*(cs.ycoords[vecnum] - cs.stpycoords[vecnum]), t*(cs.zcoords[vecnum] - cs.stpzcoords[vecnum])};
+            std::array<float, 3> v0v1P = {(v1[1]-v0[1])*(P[2]-v0[2]) - (v1[2]-v0[2])*(P[1]-v0[1]), 
+                                          (v1[2]-v0[2])*(P[0]-v0[0]) - (v1[0]-v0[0])*(P[2]-v0[2]), 
+                                          (v1[0]-v0[0])*(P[1]-v0[1]) - (v1[1]-v0[1])*(P[0]-v0[0])
+                                        };
+            if ((v0v1P[0]*normal[0] + v0v1P[1]*normal[1] + v0v1P[2]*normal[2]) < 0) continue; 
+            std::array<float, 3> v1v2P = {(v2[1]-v1[1])*(P[2]-v1[2]) - (v2[2]-v1[2])*(P[1]-v1[1]), 
+                                          (v2[2]-v1[2])*(P[0]-v1[0]) - (v2[0]-v1[0])*(P[2]-v1[2]), 
+                                          (v2[0]-v1[0])*(P[1]-v1[1]) - (v2[1]-v1[1])*(P[0]-v1[0])
+                                        };
+            if(v1v2P[0]*normal[0] + v1v2P[1]*normal[1] + v1v2P[2]*normal[2] < 0) continue;
+            std::array<float, 3> v2v0P = {(v0[1]-v2[1])*(P[2]-v2[2]) - (v0[2]-v2[2])*(P[1]-v2[1]), 
+                                          (v0[2]-v2[2])*(P[0]-v2[0]) - (v0[0]-v2[0])*(P[2]-v2[2]), 
+                                          (v0[0]-v2[0])*(P[1]-v2[1]) - (v0[1]-v2[1])*(P[0]-v2[0])
+                                        };
+            if (v2v0P[0]*normal[0] + v2v0P[1]*normal[1] + v2v0P[2]*normal[2] < 0) continue;
+            
+            cs.intersections.back().emplace_back(j);     
+            }
+            if(cs.intersections.back().size() == 1) {
+                cs.intersections.resize(cs.intersections.size() - 1);
+            }
+            cs.usable.clear();
+    
+    }
+    
 };
+objIdent obj;       
+    extern "C" {
 
+void LoadOBJ(const char* path)
+{
+    obj.objReader(path);
+    obj.Triangulator();
+}
+}
+extern "C" {
+void* Element(uint8_t vecnum) {
+    switch(vecnum) {
+        case 0: {
+            float* pointer_to_my_vector = &obj.cs.vxc[0];
+            return pointer_to_my_vector;
+        }
+        case 1: {
+            float* pointer_to_my_vector = &obj.cs.vyc[0];         
+            return pointer_to_my_vector;
+        }
+        case 2: {
+            float* pointer_to_my_vector = &obj.cs.vzc[0]; 
+            return pointer_to_my_vector;
+        }
+        case 3: {
+            void* triangle_data = &obj.cs.triangles[0][0];
+            return triangle_data;
+            }
+        }   
+    };
+}
+    
+
+extern "C" {
+    uint64_t Size(uint8_t vecnum) {
+        switch(vecnum) {
+            case 0:
+                return obj.cs.vxc.size();
+            case 1:            
+                return obj.cs.vyc.size();
+            case 2:
+                return obj.cs.vzc.size();
+            case 3:
+                return obj.cs.triangles.size(); 
+        }
+    };   
+}
 
 //ONLY FOR RENDERED OBJECTS
 class Transformation {

@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\Frontend.csproj": {}
+    "/home/matyas/Documents/3Dengine/Frontend/Frontend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\Frontend.csproj": {
+    "/home/matyas/Documents/3Dengine/Frontend/Frontend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\Frontend.csproj",
+        "projectUniqueName": "/home/matyas/Documents/3Dengine/Frontend/Frontend.csproj",
         "projectName": "Frontend",
-        "projectPath": "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\Frontend.csproj",
-        "packagesPath": "C:\\Users\\FELHASZNALO\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\FELHASZNALO\\Desktop\\progyekt\\3D-experiment-and-shit-main\\3Dengine\\Frontend\\obj\\",
+        "projectPath": "/home/matyas/Documents/3Dengine/Frontend/Frontend.csproj",
+        "packagesPath": "/home/matyas/.nuget/packages/",
+        "outputPath": "/home/matyas/Documents/3Dengine/Frontend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\FELHASZNALO\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/matyas/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -38,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -64,12 +64,22 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.14, 9.0.14]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.linux-x64",
+              "version": "[9.0.14, 9.0.14]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.313/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
