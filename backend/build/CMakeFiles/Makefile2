@@ -54,10 +54,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend
+CMAKE_SOURCE_DIR = /home/matyas/Documents/3Dengine/backend
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build
+CMAKE_BINARY_DIR = /home/matyas/Documents/3Dengine/backend/build
 
 #=============================================================================
 # Directory level rules for the build root directory
@@ -85,14 +85,14 @@ clean: CMakeFiles/Radon.dir/clean
 CMakeFiles/Radon.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles --progress-num=1,2,3 "Built target Radon"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/matyas/Documents/3Dengine/backend/build/CMakeFiles --progress-num=1,2,3 "Built target Radon"
 .PHONY : CMakeFiles/Radon.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Radon.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/matyas/Documents/3Dengine/backend/build/CMakeFiles 3
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Radon.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/matyas/Documents/3Dengine/backend/build/CMakeFiles 0
 .PHONY : CMakeFiles/Radon.dir/rule
 
 # Convenience name for target.
@@ -102,7 +102,7 @@ Radon: CMakeFiles/Radon.dir/rule
 # codegen rule for target.
 CMakeFiles/Radon.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/CMakeFiles --progress-num=1,2,3 "Finished codegen for target Radon"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/matyas/Documents/3Dengine/backend/build/CMakeFiles --progress-num=1,2,3 "Finished codegen for target Radon"
 .PHONY : CMakeFiles/Radon.dir/codegen
 
 # clean rule for target.

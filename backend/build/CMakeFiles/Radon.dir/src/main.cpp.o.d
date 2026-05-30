@@ -1,7 +1,7 @@
 CMakeFiles/Radon.dir/src/main.cpp.o: \
- /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/src/main.cpp \
+ /home/matyas/Documents/3Dengine/backend/src/main.cpp \
  /usr/include/stdc-predef.h \
- /home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/lib/3dvfunc.h \
+ /home/matyas/Documents/3Dengine/backend/lib/3dvfunc.h \
  /usr/include/c++/16.1.1/vector \
  /usr/include/c++/16.1.1/bits/requires_hosted.h \
  /usr/include/c++/16.1.1/x86_64-pc-linux-gnu/bits/c++config.h \

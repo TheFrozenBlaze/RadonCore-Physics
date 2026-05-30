@@ -7,7 +7,7 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/CMakeLists.txt"
+  "/home/matyas/Documents/3Dengine/backend/CMakeLists.txt"
   "CMakeFiles/4.3.2/CMakeCCompiler.cmake"
   "CMakeFiles/4.3.2/CMakeCXXCompiler.cmake"
   "CMakeFiles/4.3.2/CMakeSystem.cmake"

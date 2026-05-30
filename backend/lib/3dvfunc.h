@@ -45,6 +45,7 @@ public:
     };
 
     std::vector<Face> fvi;
+    std::vector<std::vector<uint32_t>> intersections;
 };
 class Vector {
 public:
@@ -91,6 +92,7 @@ public:
     void objReader(const std::string& filename);
     void AABB(uint32_t vecnum);
     void Triangulator();
+    void MoellerTrumbore(uint32_t vecnum);
 };
 
 class Transformation {

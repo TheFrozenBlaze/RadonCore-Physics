@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/include -I/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/lib
+CXX_INCLUDES = -I/home/matyas/Documents/3Dengine/backend/include -I/home/matyas/Documents/3Dengine/backend/lib
 
 CXX_FLAGS = -std=gnu++17
 

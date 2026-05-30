@@ -77,9 +77,6 @@
         }
       },
       "OpenTK.Mathematics/4.9.4": {
-        "dependencies": {
-          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
-        },
         "runtime": {
           "lib/netcoreapp3.1/OpenTK.Mathematics.dll": {
             "assemblyVersion": "4.9.4.0",
@@ -107,12 +104,12 @@
           "runtimes/win-x64/native/glfw3.dll": {
             "rid": "win-x64",
             "assetType": "native",
-            "fileVersion": "3.4.0.0"
+            "fileVersion": "0.0.0.0"
           },
           "runtimes/win-x86/native/glfw3.dll": {
             "rid": "win-x86",
             "assetType": "native",
-            "fileVersion": "3.4.0.0"
+            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -161,8 +158,7 @@
             "fileVersion": "3.4.2.0"
           }
         }
-      },
-      "System.Runtime.CompilerServices.Unsafe/6.0.0": {}
+      }
     }
   },
   "libraries": {
@@ -254,13 +250,6 @@
       "sha512": "sha512-n6TAJACALo/JOVjItB5Sve981U6AmH3vodepQRKP8mH3RL1eHNGTxbVq/RliJFu60uyJB4/pfI+/M255cUuyGQ==",
       "path": "sdl3-cs/3.4.2",
       "hashPath": "sdl3-cs.3.4.2.nupkg.sha512"
-    },
-    "System.Runtime.CompilerServices.Unsafe/6.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-/iUeP3tq1S0XdNNoMz5C9twLSrM/TH+qElHkXWaPvuNOt+99G75NrV0OS2EqHx5wMN7popYjpc8oTjC1y16DLg==",
-      "path": "system.runtime.compilerservices.unsafe/6.0.0",
-      "hashPath": "system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
     }
   }
 }

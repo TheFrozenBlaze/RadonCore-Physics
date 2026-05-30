@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"/home/matyas/Downloads/3D-experiment-and-shit-main/3Dengine/backend/build/cmake_install.cmake"
+		"/home/matyas/Documents/3Dengine/backend/build/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

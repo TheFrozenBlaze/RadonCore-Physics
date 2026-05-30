@@ -13,6 +13,7 @@ add_executable(Radon
 target_include_directories(Radon PRIVATE
 	${CMAKE_SOURCE_DIR}/include
 	${CMAKE_SOURCE_DIR}/lib
+	${CMAKE_SOURCE_DIR}/include/CL
 )
 
 
