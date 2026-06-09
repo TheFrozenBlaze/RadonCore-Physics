@@ -1,0 +1,3 @@
+/home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles/Radon.dir
+/home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles/edit_cache.dir
+/home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles/rebuild_cache.dir

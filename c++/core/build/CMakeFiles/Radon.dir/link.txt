@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/Radon.dir/link.d CMakeFiles/Radon.dir/backend_src/main.cpp.o -o Radon  -lSDL3
