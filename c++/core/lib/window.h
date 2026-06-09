@@ -5,9 +5,10 @@ class Window{
     private:
     SDL_Window *window;
     SDL_GLContext glContext;
-    public:
-        void Init();
-        void Mainloop();
-        void Clean();
+
+public:
+    void Init();
+    void Mainloop();
+    void Clean();
 };
 #endif

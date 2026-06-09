@@ -85,12 +85,12 @@ clean: CMakeFiles/Radon.dir/clean
 CMakeFiles/Radon.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles --progress-num=1,2 "Built target Radon"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles --progress-num=1,2,3,4,5 "Built target Radon"
 .PHONY : CMakeFiles/Radon.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Radon.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles 5
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Radon.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles 0
 .PHONY : CMakeFiles/Radon.dir/rule
@@ -102,7 +102,7 @@ Radon: CMakeFiles/Radon.dir/rule
 # codegen rule for target.
 CMakeFiles/Radon.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles --progress-num=1,2 "Finished codegen for target Radon"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/matyas/Documents/3Dengine/c++/core/build/CMakeFiles --progress-num=1,2,3,4,5 "Finished codegen for target Radon"
 .PHONY : CMakeFiles/Radon.dir/codegen
 
 # clean rule for target.

@@ -8,7 +8,10 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/matyas/Documents/3Dengine/c++/core/backend_src/main.cpp" "CMakeFiles/Radon.dir/backend_src/main.cpp.o" "gcc" "CMakeFiles/Radon.dir/backend_src/main.cpp.o.d"
+  "/home/matyas/Documents/3Dengine/c++/core/frontend_src/glad.c" "CMakeFiles/Radon.dir/frontend_src/glad.c.o" "gcc" "CMakeFiles/Radon.dir/frontend_src/glad.c.o.d"
+  "/home/matyas/Documents/3Dengine/c++/core/frontend_src/glmain.cpp" "CMakeFiles/Radon.dir/frontend_src/glmain.cpp.o" "gcc" "CMakeFiles/Radon.dir/frontend_src/glmain.cpp.o.d"
+  "/home/matyas/Documents/3Dengine/c++/core/frontend_src/main.cpp" "CMakeFiles/Radon.dir/frontend_src/main.cpp.o" "gcc" "CMakeFiles/Radon.dir/frontend_src/main.cpp.o.d"
+  "/home/matyas/Documents/3Dengine/c++/core/frontend_src/window.cpp" "CMakeFiles/Radon.dir/frontend_src/window.cpp.o" "gcc" "CMakeFiles/Radon.dir/frontend_src/window.cpp.o.d"
   "" "Radon" "gcc" "CMakeFiles/Radon.dir/link.d"
   )
 

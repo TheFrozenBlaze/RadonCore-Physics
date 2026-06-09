@@ -6,8 +6,6 @@
 #include "window.h"
 #include "shader.h"
 
-    
-        
         void Window::Init() {
             if (SDL_Init(SDL_INIT_VIDEO) == false)
             {
@@ -47,14 +45,13 @@
         };
         void Window::Mainloop()
         {
-            Shader shader("core/lib/shader/", "core/lib/shader/");
             bool running = true;
             SDL_Event e;
             //LoadOBJ("/home/matyas/Downloads/humanoid_quad.obj", 0);
 
             int w, h;
             //Data d = GetVector(0, 2, 0);
-
+            GL::Compile();
             while (running)
             {
                 while (SDL_PollEvent(&e) == true)
@@ -63,12 +60,17 @@
                         running = false;
                 }
                 SDL_GetWindowSize(window,&w, &h);
-                GL::Context(w, h);
+                //GL::Context(w, h);      
+                GL::PrematureDraw(w, h);
                 SDL_GL_SwapWindow(window);
             }
         };
         void Window::Clean()
         {
+            delete GL::shader;
+            GL::shader = nullptr;
+            glDeleteVertexArrays(1, &GL::VAO);
+            glDeleteBuffers(1, &GL::VBO);
             SDL_GL_DestroyContext(glContext);
             SDL_DestroyWindow(window);
             SDL_Quit();

@@ -5,14 +5,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(Radon
-	backend_src/main.cpp
+	#backend_src/main.cpp
 	#backend_src/cl/opencl.c
 	#frontend_src/volk.c
-	#frontend_src/main.cpp
-	#frontend_src/window.cpp
-	#frontend_src/glmain.cpp
-	#frontend_src/glad.c
-
+	frontend_src/main.cpp
+	frontend_src/window.cpp
+	frontend_src/glmain.cpp
+	frontend_src/glad.c
 )
 
 target_include_directories(Radon PRIVATE

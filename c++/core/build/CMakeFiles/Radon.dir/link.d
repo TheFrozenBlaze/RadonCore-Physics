@@ -2,8 +2,27 @@ Radon: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/Scrt1.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/crti.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o \
-  CMakeFiles/Radon.dir/backend_src/main.cpp.o \
+  CMakeFiles/Radon.dir/frontend_src/main.cpp.o \
+  CMakeFiles/Radon.dir/frontend_src/window.cpp.o \
+  CMakeFiles/Radon.dir/frontend_src/glmain.cpp.o \
+  CMakeFiles/Radon.dir/frontend_src/glad.c.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libSDL3.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so.1 \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/libgcc.a \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so.1 \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/libgcc.a \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libstdc++.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libm.so \
@@ -42,9 +61,47 @@ Radon: \
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/crtbeginS.o:
 
-CMakeFiles/Radon.dir/backend_src/main.cpp.o:
+CMakeFiles/Radon.dir/frontend_src/main.cpp.o:
+
+CMakeFiles/Radon.dir/frontend_src/window.cpp.o:
+
+CMakeFiles/Radon.dir/frontend_src/glmain.cpp.o:
+
+CMakeFiles/Radon.dir/frontend_src/glad.c.o:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libSDL3.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so.1:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/libgcc.a:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s_asneeded.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libgcc_s.so.1:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/libgcc.a:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/16.1.1/../../../../lib/libstdc++.so:
 

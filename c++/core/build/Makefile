@@ -129,29 +129,101 @@ Radon/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/build
 .PHONY : Radon/fast
 
-backend_src/main.o: backend_src/main.cpp.o
-.PHONY : backend_src/main.o
+frontend_src/glad.o: frontend_src/glad.c.o
+.PHONY : frontend_src/glad.o
 
 # target to build an object file
-backend_src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/backend_src/main.cpp.o
-.PHONY : backend_src/main.cpp.o
+frontend_src/glad.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/glad.c.o
+.PHONY : frontend_src/glad.c.o
 
-backend_src/main.i: backend_src/main.cpp.i
-.PHONY : backend_src/main.i
+frontend_src/glad.i: frontend_src/glad.c.i
+.PHONY : frontend_src/glad.i
 
 # target to preprocess a source file
-backend_src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/backend_src/main.cpp.i
-.PHONY : backend_src/main.cpp.i
+frontend_src/glad.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/glad.c.i
+.PHONY : frontend_src/glad.c.i
 
-backend_src/main.s: backend_src/main.cpp.s
-.PHONY : backend_src/main.s
+frontend_src/glad.s: frontend_src/glad.c.s
+.PHONY : frontend_src/glad.s
 
 # target to generate assembly for a file
-backend_src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/backend_src/main.cpp.s
-.PHONY : backend_src/main.cpp.s
+frontend_src/glad.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/glad.c.s
+.PHONY : frontend_src/glad.c.s
+
+frontend_src/glmain.o: frontend_src/glmain.cpp.o
+.PHONY : frontend_src/glmain.o
+
+# target to build an object file
+frontend_src/glmain.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/glmain.cpp.o
+.PHONY : frontend_src/glmain.cpp.o
+
+frontend_src/glmain.i: frontend_src/glmain.cpp.i
+.PHONY : frontend_src/glmain.i
+
+# target to preprocess a source file
+frontend_src/glmain.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/glmain.cpp.i
+.PHONY : frontend_src/glmain.cpp.i
+
+frontend_src/glmain.s: frontend_src/glmain.cpp.s
+.PHONY : frontend_src/glmain.s
+
+# target to generate assembly for a file
+frontend_src/glmain.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/glmain.cpp.s
+.PHONY : frontend_src/glmain.cpp.s
+
+frontend_src/main.o: frontend_src/main.cpp.o
+.PHONY : frontend_src/main.o
+
+# target to build an object file
+frontend_src/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/main.cpp.o
+.PHONY : frontend_src/main.cpp.o
+
+frontend_src/main.i: frontend_src/main.cpp.i
+.PHONY : frontend_src/main.i
+
+# target to preprocess a source file
+frontend_src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/main.cpp.i
+.PHONY : frontend_src/main.cpp.i
+
+frontend_src/main.s: frontend_src/main.cpp.s
+.PHONY : frontend_src/main.s
+
+# target to generate assembly for a file
+frontend_src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/main.cpp.s
+.PHONY : frontend_src/main.cpp.s
+
+frontend_src/window.o: frontend_src/window.cpp.o
+.PHONY : frontend_src/window.o
+
+# target to build an object file
+frontend_src/window.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/window.cpp.o
+.PHONY : frontend_src/window.cpp.o
+
+frontend_src/window.i: frontend_src/window.cpp.i
+.PHONY : frontend_src/window.i
+
+# target to preprocess a source file
+frontend_src/window.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/window.cpp.i
+.PHONY : frontend_src/window.cpp.i
+
+frontend_src/window.s: frontend_src/window.cpp.s
+.PHONY : frontend_src/window.s
+
+# target to generate assembly for a file
+frontend_src/window.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Radon.dir/build.make CMakeFiles/Radon.dir/frontend_src/window.cpp.s
+.PHONY : frontend_src/window.cpp.s
 
 # Help Target
 help:
@@ -162,9 +234,18 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... Radon"
-	@echo "... backend_src/main.o"
-	@echo "... backend_src/main.i"
-	@echo "... backend_src/main.s"
+	@echo "... frontend_src/glad.o"
+	@echo "... frontend_src/glad.i"
+	@echo "... frontend_src/glad.s"
+	@echo "... frontend_src/glmain.o"
+	@echo "... frontend_src/glmain.i"
+	@echo "... frontend_src/glmain.s"
+	@echo "... frontend_src/main.o"
+	@echo "... frontend_src/main.i"
+	@echo "... frontend_src/main.s"
+	@echo "... frontend_src/window.o"
+	@echo "... frontend_src/window.i"
+	@echo "... frontend_src/window.s"
 .PHONY : help
 
 

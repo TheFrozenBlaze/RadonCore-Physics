@@ -1,5 +1,5 @@
 #ifndef SHADER_H
-#define SHADER_#
+#define SHADER_H
 
 #include <glad/glad.h>
 
@@ -25,9 +25,11 @@ class Shader {
             fsread << fsfile.rdbuf();
             vsfile.close();
             fsfile.close();
-            
-            const char* vShaderCode = (vsread.str()).c_str();
-            const char* fShaderCode = (fsread.str()).c_str();
+            std::string vertexSource = vsread.str();
+            std::string fragmentSource = fsread.str();
+
+            const char* vShaderCode = vertexSource.c_str();
+            const char* fShaderCode = fragmentSource.c_str();
             uint vertex, fragment;
             
             vertex = glCreateShader(GL_VERTEX_SHADER);
@@ -41,6 +43,7 @@ class Shader {
             program_index = glCreateProgram();
             glAttachShader(program_index, vertex);
             glAttachShader(program_index, fragment);
+
             glLinkProgram(program_index);
             
             glDeleteShader(vertex);
