@@ -4,7 +4,7 @@
 #define CL_TARGET_OPENCL_VERSION 120
 #include <CL/opencl.h>
 #include <CL/cl.h>
-#include "lib/opencllink.h"
+#include "vectorinf.h"
 #include "opencl_algorithm_lib.h"
 
 extern "C" __attribute__((visibility("default"))) void AABB(uint32_t vecnum, uint32_t objectnum) {
@@ -14,13 +14,13 @@ extern "C" __attribute__((visibility("default"))) void AABB(uint32_t vecnum, uin
     cl_kernel kernel;
     cl_program program;
     cl_command_queue queue;
-    cl_mem triangle_buffer, vxc_buffer, vyc_buffer, vzc_buffer, min_buffer, max_buffer, usable_buffer, counter_buffer;
+    cl_mem triangle_buffer, vpc_buffer, min_buffer, max_buffer, usable_buffer, counter_buffer;
     FILE *kernel_file;
     size_t kernel_file_size, triangle_size, stpvec_size, vec_size, vertex_size, usable_size;
     void *usable_pointer;
     float *stpvec_pointer[3];
     float*vec_pointer[3];
-    float*vertex_pointer[3];
+    float*vertex_pointer;
     char *kernel_file_buffer;
 
     int err;
@@ -71,9 +71,7 @@ extern "C" __attribute__((visibility("default"))) void AABB(uint32_t vecnum, uin
     minmax[1] = {max(stpvec_pointer[0] + i, vec_pointer[0] + i), max(stpvec_pointer[1] + i, vec_pointer[1] + i), max(stpvec_pointer[2] + i, vec_pointer[2] + i), 0.f};
 
     triangle_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, triangle_size * 3 * sizeof(uint32_t), trianglepointer, &err);
-    vxc_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vertex_size, vertex_pointer[0], &err);
-    vyc_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vertex_size, vertex_pointer[1], &err);
-    vzc_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vertex_size, vertex_pointer[2], &err);
+    vpc_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vertex_size, vertex_pointer[0], &err);
     usable_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, triangle_size * sizeof(int), usable_pointer, &err);
     min_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float4), &minmax[0], &err);
     max_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float4), &minmax[1], &err);
@@ -81,9 +79,7 @@ extern "C" __attribute__((visibility("default"))) void AABB(uint32_t vecnum, uin
     queue = clCreateCommandQueue(context, device, 0, &err);
     kernel = clCreateKernel(program, "AABB", &err);
     err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &triangle_buffer);
-    err = clSetKernelArg(kernel, 1, sizeof(cl_mem), &vxc_buffer);
-    err = clSetKernelArg(kernel, 2, sizeof(cl_mem), &vyc_buffer);
-    err = clSetKernelArg(kernel, 3, sizeof(cl_mem), &vzc_buffer);
+    err = clSetKernelArg(kernel, 1, sizeof(cl_mem), &vpc_buffer);
     err = clSetKernelArg(kernel, 4, sizeof(cl_mem), &usable_buffer);
     err = clSetKernelArg(kernel, 5, sizeof(cl_mem), &max_buffer);
     err = clSetKernelArg(kernel, 6, sizeof(cl_mem), &min_buffer);
@@ -101,9 +97,7 @@ extern "C" __attribute__((visibility("default"))) void AABB(uint32_t vecnum, uin
 
     clReleaseKernel(kernel);
     clReleaseMemObject(usable_buffer); // this might change because of moeller trumbore using the same memory space
-    clReleaseMemObject(vxc_buffer);
-    clReleaseMemObject(vyc_buffer);
-    clReleaseMemObject(vzc_buffer);
+    clReleaseMemObject(vpc_buffer);
     clReleaseMemObject(triangle_buffer);
     clReleaseMemObject(min_buffer);
     clReleaseMemObject(max_buffer);

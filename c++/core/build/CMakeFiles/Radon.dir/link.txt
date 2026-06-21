@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/Radon.dir/link.d CMakeFiles/Radon.dir/frontend_src/main.cpp.o CMakeFiles/Radon.dir/frontend_src/window.cpp.o CMakeFiles/Radon.dir/frontend_src/glmain.cpp.o CMakeFiles/Radon.dir/frontend_src/glad.c.o -o Radon  -lSDL3 -lgcc_s_asneeded -lgcc_s_asneeded

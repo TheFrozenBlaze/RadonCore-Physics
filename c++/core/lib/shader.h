@@ -43,8 +43,16 @@ class Shader {
             program_index = glCreateProgram();
             glAttachShader(program_index, vertex);
             glAttachShader(program_index, fragment);
-
+            const char* varyings[] = { "gl_Position" };
+            glTransformFeedbackVaryings(program_index, 1, varyings, GL_INTERLEAVED_ATTRIBS);
             glLinkProgram(program_index);
+            GLint success{};
+            GLchar* infoLog;
+            glGetProgramiv(program_index, GL_LINK_STATUS, &success);
+            if (!success) {
+            glGetProgramInfoLog(program_index, 512, NULL, infoLog);
+            std::cout << "Shader link error:\n" << infoLog << std::endl;
+}
             
             glDeleteShader(vertex);
             glDeleteShader(fragment);

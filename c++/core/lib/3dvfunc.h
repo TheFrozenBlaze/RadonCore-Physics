@@ -18,14 +18,8 @@
 
 struct Coord {
 public:
-    // length
-    std::vector<float> xlen;
-    std::vector<float> ylen;
-    std::vector<float> zlen;
     // vertices
-    std::vector<float> vxc;
-    std::vector<float> vyc;
-    std::vector<float> vzc;
+    std::vector<float> vpc;
     //vertex normals
     std::vector<float> vnxc;
     std::vector<float> vnyc;
@@ -36,9 +30,10 @@ public:
     std::vector<float> tvzc;
     //usable faces(that could be intersected)
     std::vector<int> usable;
-    std::vector<std::array<uint64_t, 3>> triangles;
-    std::vector<uint64_t> face;
+    std::vector<std::array<uint32_t, 3>> triangles;
+    std::vector<uint32_t> face;
     std::vector<std::vector<uint32_t>> intersections;
+    std::array<std::array<float, 3>, 6> detailes;
 };
 class Rays {
   public:
@@ -55,52 +50,39 @@ class Vector
 {
 public:
     Coord cs;
-    float xl = 0.0f;
-    float yl = 0.0f;
-    float zl = 0.0f;
-    float a = 0.0f;
+    /*float a = 0.0f;
     float b = 0.0f;
     float c = 0.0f;
     float m = 0.0f; // steepness
-    float cc = 0.0f; // function crossing the given axis
+    float cc = 0.0f; // function crossing the given axis*/
 
-    enum class crdsysdim {
+    /*enum class crdsysdim {
         XY,
         XZ,
         ZY
-    };
+    };*/
 
     // Calculate vector length
     float lengthVector(float x, float y, float z, float stpx, float stpy,
                      float stpz) {
-    xl = std::fabs(stpx - x);
-    cs.xlen.push_back(xl);
-
-    yl = std::fabs(stpy - y);
-    cs.ylen.push_back(yl);
-
-    zl = std::fabs(stpz - z);
-    cs.zlen.push_back(zl);
-
-    float xzd = std::sqrt(xl * xl + zl * zl);
-    float ydxz = std::sqrt(xzd * xzd + yl * yl);
-
-    return ydxz;
+      float ydxz = std::sqrt((x - stpx) * (x - stpx) + (y - stpy) * (y - stpy) + (z - stpz) * (z - stpz));
+      return ydxz;
   }
 };
 class objIdent {
 public:
-    std::vector<Coord> objects;
+    static std::vector<Coord> objects;
     
     void objReader(const std::string &filename) {
-    objects.emplace_back();
-    Coord& cs = objects.back();
-    
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-      std::cout << "Error reading file: " << filename << std::endl;
-      return;
-    }
+      objects.emplace_back();
+      Coord &cs = objects.back();
+      std::array<float, 3> minx, maxx, miny, maxy, minz, maxz;
+      std::ifstream file(filename);
+      if (!file.is_open())
+      {
+        std::cout << "Error reading file: " << filename << std::endl;
+        return;
+      }
 
     std::string line;
     while (std::getline(file, line)) {
@@ -109,9 +91,16 @@ public:
         std::string v;
         float x, y, z;
         iss >> v >> x >> y >> z;
-        cs.vxc.push_back(x);
-        cs.vyc.push_back(y);
-        cs.vzc.push_back(z);
+        minx = x < minx[0] ? std::array<float,3>{x, y,z} : minx;
+        maxx = x > maxx[0] ? std::array<float,3>{x, y,z} : maxx;
+        miny = y < miny[1] ? std::array<float,3>{x, y,z} : miny;
+        maxy = y > maxy[1] ? std::array<float,3>{x, y,z} : maxy;
+        minz = z < minz[2] ? std::array<float,3>{x, y,z} : minz;
+        maxz = z > maxz[2] ? std::array<float,3>{x, y,z} : maxz;
+        
+        cs.vpc.push_back(x);
+        cs.vpc.push_back(y);
+        cs.vpc.push_back(z);
         //std::cout << "added: " << x << " " << y << " " << z << std::endl;
       }
       else if (line.size() > 1 && line[0] == 'f' && line[1] == ' ')
@@ -128,7 +117,7 @@ public:
                   if (i == line.size() - 1 && line[i] != ' ')
                   { // end of line write
                       numberstring.push_back(line[i]);
-                      cs.face.emplace_back((std::stoi(numberstring)+cs.vxc.size()) % (cs.vxc.size() + 1));
+                      cs.face.emplace_back((std::stoi(numberstring)+(cs.vpc.size())/3) % (cs.vpc.size()/3 + 1));
                       numberstring.clear();
                       Triangulator(objects.size()-1);
                       cs.face.clear();
@@ -140,7 +129,7 @@ public:
                     point = 0;
                     continue;
                     } else {
-                      cs.face.emplace_back((std::stoi(numberstring)+cs.vxc.size()) % (cs.vxc.size() + 1));                      
+                      cs.face.emplace_back((std::stoi(numberstring)+(cs.vpc.size())/3) % (cs.vpc.size()/3 + 1));                    
                       numberstring.clear();
                     }
                   } else if(point == 1) {
@@ -149,7 +138,7 @@ public:
               } else {
                 if (line[i] == '/')
                   {
-                    cs.face.emplace_back((std::stoi(numberstring)+cs.vxc.size()) % (cs.vxc.size() + 1));
+                    cs.face.emplace_back((std::stoi(numberstring)+(cs.vpc.size())/3) % (cs.vpc.size()/3 + 1));
                     numberstring.clear();
                     point = 1;
                     continue;
@@ -160,10 +149,14 @@ public:
             }
           }
         }
-    cs.vxc.shrink_to_fit();
-    cs.vyc.shrink_to_fit();
-    cs.vzc.shrink_to_fit();
+    cs.vpc.shrink_to_fit();
     cs.face.shrink_to_fit();
+    cs.detailes[0] = minx;
+    cs.detailes[1] = maxx;
+    cs.detailes[2] = miny;
+    cs.detailes[3] = maxy;
+    cs.detailes[4] = minz;
+    cs.detailes[5] = maxz;
     };
 
   // Check vector intersection
@@ -287,30 +280,30 @@ public:
             std::cout << "INVALID FACE" << std::endl;
             break;
           } else {
-            coordx = (cs.vyc[cs.face[f]] -
-                      cs.vyc[cs.face[0]]) *
-                         (cs.vzc[cs.face[1 + f]] -
-                          cs.vzc[cs.face[0]]) -
-                     (cs.vyc[cs.face[1 + f]] -
-                      cs.vyc[cs.face[0]]) *
-                         (cs.vzc[cs.face[f]] -
-                          cs.vzc[cs.face[0]]);
-            coordy = (cs.vzc[cs.face[f]] -
-                      cs.vzc[cs.face[0]]) *
-                         (cs.vxc[cs.face[1 + f]] -
-                          cs.vxc[cs.face[0]]) -
-                     (cs.vzc[cs.face[1 + f]] -
-                      cs.vzc[cs.face[0]]) *
-                         (cs.vxc[cs.face[f]] -
-                          cs.vxc[cs.face[0]]);
-            coordz = (cs.vxc[cs.face[f]] -
-                      cs.vxc[cs.face[0]]) *
-                         (cs.vyc[cs.face[1 + f]] -
-                          cs.vyc[cs.face[0]]) -
-                     (cs.vxc[cs.face[1 + f]] -
-                      cs.vxc[cs.face[0]]) *
-                         (cs.vyc[cs.face[f]] -
-                          cs.vyc[cs.face[0]]);
+            coordx = (cs.vpc[cs.face[f]*3+1] -
+                      cs.vpc[cs.face[0]*3+1]) *
+                         (cs.vpc[cs.face[1 + f]*3+2] -
+                          cs.vpc[cs.face[0]*3+2]) -
+                     (cs.vpc[cs.face[1 + f]*3+1] -
+                      cs.vpc[cs.face[0]*3+1]) *
+                         (cs.vpc[cs.face[f]*3+2] -
+                          cs.vpc[cs.face[0]*3+2]);
+            coordy = (cs.vpc[cs.face[f]*3 +2] -
+                      cs.vpc[cs.face[0]*3 +2]) *
+                         (cs.vpc[cs.face[1 + f]*3] -
+                          cs.vpc[cs.face[0]*3]) -
+                     (cs.vpc[cs.face[1 + f]*3 +2] -
+                      cs.vpc[cs.face[0]*3 +2]) *
+                         (cs.vpc[cs.face[f]*3] -
+                          cs.vpc[cs.face[0]*3]);
+            coordz = (cs.vpc[cs.face[f]*3] -
+                      cs.vpc[cs.face[0]*3]) *
+                         (cs.vpc[cs.face[1 + f]*3+1] -
+                          cs.vpc[cs.face[0]*3 +1]) -
+                     (cs.vpc[cs.face[1 + f]*3] -
+                      cs.vpc[cs.face[0]*3]) *
+                         (cs.vpc[cs.face[f]*3+1] -
+                          cs.vpc[cs.face[0]*3+1]);
             x = limit > std::fabs(coordx) && std::fabs(coordx) >= 0 ? 0.0f
                                                                     : coordx;
             y = limit > std::fabs(coordy) && std::fabs(coordy) >= 0 ? 0.0f
@@ -370,8 +363,8 @@ public:
                 v2 = cs.face[j - 2];//caLculating normals=> optimization compared to the last version 
                 v1 = cs.face[j - 1];
                 v0 = cs.face[j];
-                rv1 = {cs.vyc[v1] - cs.vyc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                rv2 = {cs.vyc[v0] - cs.vyc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
+                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
                 if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                   reflex.insert(j - 1);
                 }
@@ -380,24 +373,24 @@ public:
                 v2 = cs.face[j - 2];
                 v1 = cs.face[j - 1];
                 v0 = cs.face[j];
-                rv1 = {cs.vyc[v1] - cs.vyc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                rv2 = {cs.vyc[v0] - cs.vyc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
+                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
                 if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                   reflex.insert(j - 1);
                 } // until here, the cycle is same as above
                 v2 = v1;
                 v1 = v0;
                 v0 = cs.face[0];
-                rv1 = {cs.vyc[v1] - cs.vyc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                rv2 = {cs.vyc[v0] - cs.vyc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
+                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
                 if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                   reflex.insert(j); // calculating the reflexness of the last vertex
                 }
                 v2 = v1;
                 v1 = v0;
                 v0 = cs.face[1];
-                rv1 = {cs.vyc[v1] - cs.vyc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                rv2 = {cs.vyc[v0] - cs.vyc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
+                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
                 if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                   reflex.insert(0); //calculating the reflexness of the first vertex => all reflexness is calculated
                 }
@@ -412,8 +405,8 @@ public:
                 v2 = cs.face[cs.face.size() + 1 - j];
                 v1 = cs.face[cs.face.size() - j];
                 v0 = cs.face[cs.face.size() - 1 - j];
-                rv1 = {cs.vyc[v1] - cs.vyc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                rv2 = {cs.vyc[v0] - cs.vyc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
+                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
                 if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                   reflex.insert(cs.face.size() - j);
                 }
@@ -422,24 +415,24 @@ public:
                 v2 = cs.face[cs.face.size() + 1 - j];
                 v1 = cs.face[cs.face.size() - j];
                 v0 = cs.face[cs.face.size() - 1 - j];
-                rv1 = {cs.vyc[v1] - cs.vyc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                rv2 = {cs.vyc[v0] - cs.vyc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
+                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
                 if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                   reflex.insert(cs.face.size() - j);
                 } // until here, the cycle is same as above
                 v2 = v1;
                 v1 = v0;
                 v0 = cs.face[*(vindices.begin())];
-                rv1 = {cs.vyc[v1] - cs.vyc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                rv2 = {cs.vyc[v0] - cs.vyc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
+                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
                 if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                   reflex.insert(0);
                 }
                 v2 = v1;
                 v1 = v0;
                 v0 = cs.face[*(std::next(vindices.begin(), 1))];
-                rv1 = {cs.vyc[v1] - cs.vyc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                rv2 = {cs.vyc[v0] - cs.vyc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
+                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
                 if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                   reflex.insert(cs.face.size() - 1);
                 }
@@ -464,7 +457,7 @@ public:
                   if (reflex.empty() == 1)
                   { // O(n) check for reflex vertices, if there are none, then we can be sure that all the triangles are valid,\
                       // and we can just triangulate the rest of the polygon without checks=> imporvement compared to the last version,
-                      cs.triangles.emplace_back(std::array<long unsigned int, 3>{
+                      cs.triangles.emplace_back(std::array<uint32_t, 3>{
                           cs.face[*vindices.begin()],
                           cs.face[*step],
                           cs.face[*(std::next(step, 1))]});
@@ -518,29 +511,29 @@ public:
                           if (reflexelement == reflex.size())
                           {
                               cs.triangles.emplace_back(
-                                  std::array<long unsigned int, 3>{
+                                  std::array<uint32_t, 3>{
                                       v0, cs.face[*firstelement], v1});
                               firstelement = vindices.erase(firstelement);
                               nextnext++;
                               switch (switcher)
                               {
                               case 1:
-                                  rv1 = {cs.vyc[v0] - cs.vyc[cs.face[*prev2]],
-                                         cs.vzc[v0] -
-                                             cs.vzc[cs.face[*prev2]]};
-                                  rv2 = {cs.vyc[v1] - cs.vyc[cs.face[*prev2]],
-                                         cs.vzc[v1] -
-                                             cs.vzc[cs.face[*prev2]]};
+                                  rv1 = {cs.vpc[v0*3+1] - cs.vpc[cs.face[*prev2]*3+1],
+                                         cs.vpc[v0*3+2] -
+                                             cs.vpc[cs.face[*prev2]*3 +2]};
+                                  rv2 = {cs.vpc[v1*3+1] - cs.vpc[cs.face[*prev2]*3+1],
+                                         cs.vpc[v1*3+2] -
+                                             cs.vpc[cs.face[*prev2]*3+2]};
                                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
                                   {
                                       reflex.erase(*prev1);
                                   }
                                   break;
                               case 2:
-                                  rv1 = {cs.vyc[v1] - cs.vyc[v0],
-                                         cs.vzc[v1] - cs.vzc[v0]};
-                                  rv2 = {cs.vyc[v2] - cs.vyc[v0],
-                                         cs.vzc[v2] - cs.vzc[v0]};
+                                  rv1 = {cs.vpc[v1*3+1] - cs.vpc[v0*3+2],
+                                         cs.vpc[v1*3+2] - cs.vpc[v0*3+2]};
+                                  rv2 = {cs.vpc[v2*3 +1] - cs.vpc[v0*3+1],
+                                         cs.vpc[v2*3+2] - cs.vpc[v0*3+2]};
                                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
                                   {
                                       reflex.erase(*firstelement);
@@ -555,11 +548,11 @@ public:
                               for (size_t j = 0; j < reflex.size(); j++)
                               {
                                   std::array<float, 2> p = {
-                                      cs.vyc[cs.face[*(std::next(reflex.begin(), j))]],
-                                      cs.vzc[cs.face[*(std::next(reflex.begin(), j))]]}; // the vertex of the polygon
-                                  std::array<float, 2> tp1 = {cs.vyc[v0], cs.vzc[v0]};
-                                  std::array<float, 2> tp2 = {cs.vyc[v1], cs.vzc[v1]};
-                                  std::array<float, 2> tp3 = {cs.vyc[v2], cs.vzc[v2]};
+                                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+1],
+                                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+2]}; // the vertex of the polygon
+                                  std::array<float, 2> tp1 = {cs.vpc[v0*3+1], cs.vpc[v0*3+2]};
+                                  std::array<float, 2> tp2 = {cs.vpc[v1*3+1], cs.vpc[v1*3+2]};
+                                  std::array<float, 2> tp3 = {cs.vpc[v2*3+1], cs.vpc[v2*3+2]};
                                   struct CPpair
                                   {
                                       float ad = 0;
@@ -606,36 +599,36 @@ public:
                               if (valid == false)
                               { // in the case of the triangle being valid
                                   cs.triangles.emplace_back(
-                                      std::array<long unsigned int, 3>{
+                                      std::array<uint32_t, 3>{
                                           v0, cs.face[*firstelement], v1});
                                   firstelement = vindices.erase(firstelement);
 
                                   switch (switcher)
+                              {
+                              case 1:
+                                  rv1 = {cs.vpc[v0*3+1] - cs.vpc[cs.face[*prev2]*3+1],
+                                         cs.vpc[v0*3+2] -
+                                             cs.vpc[cs.face[*prev2]*3 +2]};
+                                  rv2 = {cs.vpc[v1*3+1] - cs.vpc[cs.face[*prev2]*3+1],
+                                         cs.vpc[v1*3+2] -
+                                             cs.vpc[cs.face[*prev2]*3+2]};
+                                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
                                   {
-                                  case 1:
-                                      rv1 = {
-                                          cs.vyc[v0] - cs.vyc[cs.face[*prev2]],
-                                          cs.vzc[v0] - cs.vzc[cs.face[*prev2]]};
-                                      rv2 = {
-                                          cs.vyc[v1] - cs.vyc[cs.face[*prev2]],
-                                          cs.vzc[v1] - cs.vzc[cs.face[*prev2]]};
-                                      if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
-                                      {
-                                          reflex.erase(*prev1);
-                                      }
-                                      break;
-                                  case 2:
-                                      rv1 = {cs.vyc[v1] - cs.vyc[v0],
-                                             cs.vzc[v1] - cs.vzc[v0]};
-                                      rv2 = {cs.vyc[v2] - cs.vyc[v0],
-                                             cs.vzc[v2] - cs.vzc[v0]};
-                                      if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
-                                      {
-                                          reflex.erase(*firstelement);
-
-                                          break;
-                                      }
+                                      reflex.erase(*prev1);
                                   }
+                                  break;
+                              case 2:
+                                  rv1 = {cs.vpc[v1*3+1] - cs.vpc[v0*3+2],
+                                         cs.vpc[v1*3+2] - cs.vpc[v0*3+2]};
+                                  rv2 = {cs.vpc[v2*3 +1] - cs.vpc[v0*3+1],
+                                         cs.vpc[v2*3+2] - cs.vpc[v0*3+2]};
+                                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                                  {
+                                      reflex.erase(*firstelement);
+
+                                      break;
+                                  }
+                              }
                               }
                           }
                           else
@@ -644,11 +637,11 @@ public:
                               for (size_t j = 0; j < reflex.size(); j++)
                               {
                                   std::array<float, 2> p = {
-                                      cs.vyc[cs.face[*(std::next(reflex.begin(), j))]],
-                                      cs.vzc[cs.face[*(std::next(reflex.begin(), j))]]}; // the vertex of the polygon
-                                  std::array<float, 2> tp1 = {cs.vyc[v0], cs.vzc[v0]};
-                                  std::array<float, 2> tp2 = {cs.vyc[v1], cs.vzc[v1]};
-                                  std::array<float, 2> tp3 = {cs.vyc[v2], cs.vzc[v2]};
+                                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+1],
+                                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+2]}; // the vertex of the polygon
+                                  std::array<float, 2> tp1 = {cs.vpc[v0*3+1], cs.vpc[v0*3+2]};
+                                  std::array<float, 2> tp2 = {cs.vpc[v1*3+1], cs.vpc[v1*3+2]};
+                                  std::array<float, 2> tp3 = {cs.vpc[v2*3+1], cs.vpc[v2*3+2]};
                                   struct CPpair
                                   {
                                       float ad = 0;
@@ -695,7 +688,7 @@ public:
                               if (valid == false)
                               {
                                   cs.triangles.emplace_back(
-                                      std::array<long unsigned int, 3>{
+                                      std::array<uint32_t, 3>{
                                           v0, cs.face[*firstelement], v1});
                                   firstelement = vindices.erase(firstelement);
                                   firstelement++;
@@ -730,8 +723,8 @@ public:
                     v2 = cs.face[j - 2];
                     v1 = cs.face[j - 1];
                     v0 = cs.face[j];
-                    rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                    rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
+                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
                     if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                       reflex.insert(j - 1);
                     }
@@ -740,24 +733,24 @@ public:
                     v2 = cs.face[j - 2];
                     v1 = cs.face[j - 1];
                     v0 = cs.face[j];
-                    rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                    rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
+                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
                     if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                       reflex.insert(j - 1);
                     } // until here, the cycle is same as above
                     v2 = v1;
                     v1 = v0;
                     v0 = cs.face[0];
-                    rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                    rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
+                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
                     if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                       reflex.insert(j);
                     }
                     v2 = v1;
                     v1 = v0;
                     v0 = cs.face[1];
-                    rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                    rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
+                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
                     if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                       reflex.insert(0);
                     }
@@ -772,8 +765,8 @@ public:
                     v2 = cs.face[cs.face.size() + 1 - j];
                     v1 = cs.face[cs.face.size() - j];
                     v0 = cs.face[cs.face.size() - 1 - j];
-                    rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                    rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
+                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
                     if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                       reflex.insert(cs.face.size() - j);
                     }
@@ -782,24 +775,24 @@ public:
                     v2 = cs.face[cs.face.size() + 1 - j];
                     v1 = cs.face[cs.face.size() - j];
                     v0 = cs.face[cs.face.size() - 1 - j];
-                    rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                    rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
+                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
                     if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                       reflex.insert(cs.face.size() - j);
                     } // until here, the cycle is same as above
                     v2 = v1;
                     v1 = v0;
                     v0 = cs.face[*(vindices.begin())];
-                    rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                    rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
+                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
                     if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                       reflex.insert(0);
                     }
                     v2 = v1;
                     v1 = v0;
                     v0 = cs.face[*(std::next(vindices.begin(), 1))];
-                    rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vzc[v1] - cs.vzc[v2]};
-                    rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vzc[v0] - cs.vzc[v2]};
+                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
+                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
                     if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                       reflex.insert(cs.face.size() - 1);
                     }
@@ -828,7 +821,7 @@ public:
                     {
                         //std::cout << "reflex is empty" << std::endl;
                         cs.triangles.emplace_back(
-                            std::array<long unsigned int, 3>{
+                            std::array<uint32_t, 3>{
                                 cs.face[*vindices.begin()],
                                 cs.face[*step],
                                 cs.face[*(std::next(step, 1))]});
@@ -880,7 +873,7 @@ public:
 
                         if (reflexelement == reflex.size()) {
                           cs.triangles.emplace_back(
-                              std::array<long unsigned int, 3>{
+                              std::array<uint32_t, 3>{
                                   v0, cs.face[*firstelement], v1});
                           firstelement = vindices.erase(firstelement);
                           /*std::cout << "reflex.size() is reflexelement" << std::endl;
@@ -890,23 +883,23 @@ public:
                           nextnext++;
                           switch (switcher) {
                           case 1:
-                            rv1 = {cs.vxc[v0] -
-                                       cs.vxc[cs.face[*prev2]],
-                                   cs.vzc[v0] -
-                                       cs.vzc[cs.face[*prev2]]};
-                            rv2 = {cs.vxc[v1] -
-                                       cs.vxc[cs.face[*prev2]],
-                                   cs.vzc[v1] -
-                                       cs.vzc[cs.face[*prev2]]};
+                            rv1 = {cs.vpc[v0*3] -
+                                       cs.vpc[cs.face[*prev2]*3],
+                                   cs.vpc[v0*3+2] -
+                                       cs.vpc[cs.face[*prev2]*3+2]};
+                            rv2 = {cs.vpc[v1*3] -
+                                       cs.vpc[cs.face[*prev2]*3],
+                                   cs.vpc[v1*3+2] -
+                                       cs.vpc[cs.face[*prev2]*3+2]};
                             if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
                               reflex.erase(*prev1);
                             }
                             break;
                           case 2:
-                            rv1 = {cs.vxc[v1] - cs.vxc[v0],
-                                   cs.vzc[v1] - cs.vzc[v0]};
-                            rv2 = {cs.vxc[v2] - cs.vxc[v0],
-                                   cs.vzc[v2] - cs.vzc[v0]};
+                            rv1 = {cs.vpc[v1*3] - cs.vpc[v0*3],
+                                   cs.vpc[v1*3+2] - cs.vpc[v0*3+2]};
+                            rv2 = {cs.vpc[v2*3] - cs.vpc[v0*3],
+                                   cs.vpc[v2*3+2] - cs.vpc[v0*3+2]};
                             if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
                               reflex.erase(*firstelement);
 
@@ -918,11 +911,11 @@ public:
                           valid = false;
                           for (size_t j = 0; j < reflex.size(); j++) {
                             std::array<float, 2> p = {
-                                cs.vxc[cs.face[*(std::next(reflex.begin(), j))]],
-                                cs.vzc[cs.face[*(std::next(reflex.begin(), j))]]}; // the vertex of the polygon
-                            std::array<float, 2> tp1 = {cs.vxc[v0], cs.vzc[v0]};
-                            std::array<float, 2> tp2 = {cs.vxc[v1], cs.vzc[v1]};
-                            std::array<float, 2> tp3 = {cs.vxc[v2], cs.vzc[v2]};
+                                cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3],
+                                cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+2]}; // the vertex of the polygon
+                            std::array<float, 2> tp1 = {cs.vpc[v0*3], cs.vpc[v0*3+2]};
+                            std::array<float, 2> tp2 = {cs.vpc[v1*3], cs.vpc[v1*3+2]};
+                            std::array<float, 2> tp3 = {cs.vpc[v2*3], cs.vpc[v2*3+2]};
                             struct CPpair {
                               float ad = 0;
                               float bc = 0;
@@ -969,7 +962,7 @@ public:
                           }
                           if (valid == false) {
                             cs.triangles.emplace_back(
-                                std::array<long unsigned int, 3>{
+                                std::array<uint32_t, 3>{
                                     v0, cs.face[*firstelement],
                                     v1});
                             firstelement = vindices.erase(firstelement);
@@ -979,23 +972,23 @@ public:
                                 << v1 << std::endl;*/
                             switch (switcher) {
                             case 1:
-                              rv1 = {cs.vxc[v0] -
-                                         cs.vxc[cs.face[*prev2]],
-                                     cs.vzc[v0] -
-                                         cs.vzc[cs.face[*prev2]]};
-                              rv2 = {cs.vxc[v1] -
-                                         cs.vxc[cs.face[*prev2]],
-                                     cs.vzc[v1] -
-                                         cs.vzc[cs.face[*prev2]]};
+                              rv1 = {cs.vpc[v0*3] -
+                                        cs.vpc[cs.face[*prev2]*3],
+                                    cs.vpc[v0*3+2] -
+                                        cs.vpc[cs.face[*prev2]*3+2]};
+                              rv2 = {cs.vpc[v1*3] -
+                                        cs.vpc[cs.face[*prev2]*3],
+                                    cs.vpc[v1*3+2] -
+                                        cs.vpc[cs.face[*prev2]*3+2]};
                               if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
                                 reflex.erase(*prev1);
                               }
                               break;
                             case 2:
-                              rv1 = {cs.vxc[v1] - cs.vxc[v0],
-                                     cs.vzc[v1] - cs.vzc[v0]};
-                              rv2 = {cs.vxc[v2] - cs.vxc[v0],
-                                     cs.vzc[v2] - cs.vzc[v0]};
+                              rv1 = {cs.vpc[v1*3] - cs.vpc[v0*3],
+                                    cs.vpc[v1*3+2] - cs.vpc[v0*3+2]};
+                              rv2 = {cs.vpc[v2*3] - cs.vpc[v0*3],
+                                    cs.vpc[v2*3+2] - cs.vpc[v0*3+2]};
                               if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
                                 reflex.erase(*firstelement);
 
@@ -1008,11 +1001,11 @@ public:
                           //std::cout << "reflexelement is 0" << std::endl;
                           for (size_t j = 0; j < reflex.size(); j++) {
                             std::array<float, 2> p = {
-                                cs.vxc[cs.face[*(std::next(reflex.begin(), j))]],
-                                cs.vzc[cs.face[*(std::next(reflex.begin(), j))]]}; // the vertex of the polygon
-                            std::array<float, 2> tp1 = {cs.vxc[v0], cs.vzc[v0]};
-                            std::array<float, 2> tp2 = {cs.vxc[v1], cs.vzc[v1]};
-                            std::array<float, 2> tp3 = {cs.vxc[v2], cs.vzc[v2]};
+                                cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3],
+                                cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+2]}; // the vertex of the polygon
+                            std::array<float, 2> tp1 = {cs.vpc[v0*3], cs.vpc[v0*3+2]};
+                            std::array<float, 2> tp2 = {cs.vpc[v1*3], cs.vpc[v1*3+2]};
+                            std::array<float, 2> tp3 = {cs.vpc[v2*3], cs.vpc[v2*3+2]};
                             struct CPpair {
                               float ad = 0;
                               float bc = 0;
@@ -1059,7 +1052,7 @@ public:
                           }
                           if (valid == false) {
                             cs.triangles.emplace_back(
-                                std::array<long unsigned int, 3>{
+                                std::array<uint32_t, 3>{
                                     v0, cs.face[*firstelement],
                                     v1});
                                     //std::cout << "Triangle: " << v0 << " "<< cs.fvi[i].ver[*firstelement].v - 1 << " "<< v1 << std::endl;
@@ -1095,8 +1088,8 @@ public:
                   v2 = cs.face[j - 2];
                   v1 = cs.face[j - 1];
                   v0 = cs.face[j];
-                  rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vyc[v1] - cs.vyc[v2]};
-                  rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vyc[v0] - cs.vyc[v2]};
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                     reflex.insert(j - 1);
                   }
@@ -1105,24 +1098,24 @@ public:
                   v2 = cs.face[j - 2];
                   v1 = cs.face[j - 1];
                   v0 = cs.face[j];
-                  rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vyc[v1] - cs.vyc[v2]};
-                  rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vyc[v0] - cs.vyc[v2]};
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                     reflex.insert(j - 1);
                   } // until here, the cycle is same as above
                   v2 = v1;
                   v1 = v0;
                   v0 = cs.face[0];
-                  rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vyc[v1] - cs.vyc[v2]};
-                  rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vyc[v0] - cs.vyc[v2]};
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                     reflex.insert(j);
                   }
                   v2 = v1;
                   v1 = v0;
                   v0 = cs.face[1];
-                  rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vyc[v1] - cs.vyc[v2]};
-                  rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vyc[v0] - cs.vyc[v2]};
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                     reflex.insert(0);
                   }
@@ -1137,8 +1130,8 @@ public:
                   v2 = cs.face[cs.face.size() + 1 - j];
                   v1 = cs.face[cs.face.size() - j];
                   v0 = cs.face[cs.face.size() - 1 - j];
-                  rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vyc[v1] - cs.vyc[v2]};
-                  rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vyc[v0] - cs.vyc[v2]};
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                     reflex.insert(cs.face.size() - j);
                   }
@@ -1147,24 +1140,24 @@ public:
                   v2 = cs.face[cs.face.size() + 1 - j];
                   v1 = cs.face[cs.face.size() - j];
                   v0 = cs.face[cs.face.size() - 1 - j];
-                  rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vyc[v1] - cs.vyc[v2]};
-                  rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vyc[v0] - cs.vyc[v2]};
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                     reflex.insert(cs.face.size() - j);
                   } // until here, the cycle is same as above
                   v2 = v1;
                   v1 = v0;
                   v0 = cs.face[*(vindices.begin())];
-                  rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vyc[v1] - cs.vyc[v2]};
-                  rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vyc[v0] - cs.vyc[v2]};
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                     reflex.insert(0);
                   }
                   v2 = v1;
                   v1 = v0;
                   v0 = cs.face[*(std::next(vindices.begin(), 1))];
-                  rv1 = {cs.vxc[v1] - cs.vxc[v2], cs.vyc[v1] - cs.vyc[v2]};
-                  rv2 = {cs.vxc[v0] - cs.vxc[v2], cs.vyc[v0] - cs.vyc[v2]};
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
                   if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
                     reflex.insert(cs.face.size() - 1);
                   }
@@ -1187,7 +1180,7 @@ public:
                 //std::cout << "I made it to while loop in case 2" << std::endl;
                 while (vindices.size() >= 3) {
                   if (reflex.empty() == 1) {
-                    cs.triangles.emplace_back(std::array<long unsigned int, 3>{
+                    cs.triangles.emplace_back(std::array<uint32_t, 3>{
                         cs.face[*vindices.begin()],
                         cs.face[*step],
                         cs.face[*(std::next(step, 1))]});
@@ -1230,27 +1223,27 @@ public:
 
                       if (reflexelement == reflex.size()) {
                         cs.triangles.emplace_back(
-                            std::array<long unsigned int, 3>{
+                            std::array<uint32_t, 3>{
                                 v0, cs.face[*firstelement], v1});
                         firstelement = vindices.erase(firstelement);
                         nextnext++;
                         switch (switcher) {
                         case 1:
                           rv1 = {
-                              cs.vxc[v0] - cs.vxc[cs.face[*prev2]],
-                              cs.vyc[v0] - cs.vyc[cs.face[*prev2]]};
+                              cs.vpc[v0*3] - cs.vpc[cs.face[*prev2]*3],
+                              cs.vpc[v0*3+1] - cs.vpc[cs.face[*prev2]*3+1]};
                           rv2 = {
-                              cs.vxc[v1] - cs.vxc[cs.face[*prev2]],
-                              cs.vyc[v1] - cs.vyc[cs.face[*prev2]]};
+                              cs.vpc[v1*3] - cs.vpc[cs.face[*prev2]*3],
+                              cs.vpc[v1*3+1] - cs.vpc[cs.face[*prev2]*3+1]};
                           if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
                             reflex.erase(*prev1);
                           }
                           break;
                         case 2:
-                          rv1 = {cs.vxc[v1] - cs.vxc[v0],
-                                 cs.vyc[v1] - cs.vyc[v0]};
-                          rv2 = {cs.vxc[v2] - cs.vxc[v0],
-                                 cs.vyc[v2] - cs.vyc[v0]};
+                          rv1 = {cs.vpc[v1*3] - cs.vpc[v0*3],
+                                 cs.vpc[v1*3+1] - cs.vpc[v0*3+1]};
+                          rv2 = {cs.vpc[v2*3] - cs.vpc[v0*3],
+                                 cs.vpc[v2*3+1] - cs.vpc[v0*3+1]};
                           if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
                             reflex.erase(*firstelement);
 
@@ -1261,11 +1254,11 @@ public:
                         valid = false;
                         for (size_t j = 0; j < reflex.size(); j++) {
                           std::array<float, 2> p = {
-                              cs.vxc[cs.face[*(std::next(reflex.begin(), j))]],
-                              cs.vyc[cs.face[*(std::next(reflex.begin(), j))]]}; // the vertex of the polygon
-                          std::array<float, 2> tp1 = {cs.vxc[v0], cs.vyc[v0]};
-                          std::array<float, 2> tp2 = {cs.vxc[v1], cs.vyc[v1]};
-                          std::array<float, 2> tp3 = {cs.vxc[v2], cs.vyc[v2]};
+                              cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3],
+                              cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+1]}; // the vertex of the polygon
+                          std::array<float, 2> tp1 = {cs.vpc[v0*3], cs.vpc[v0*3+1]};
+                          std::array<float, 2> tp2 = {cs.vpc[v1*3], cs.vpc[v1*3+1]};
+                          std::array<float, 2> tp3 = {cs.vpc[v2*3], cs.vpc[v2*3+1]};
                           struct CPpair {
                             float ad = 0;
                             float bc = 0;
@@ -1311,29 +1304,27 @@ public:
                         }
                         if (valid == false) {
                           cs.triangles.emplace_back(
-                              std::array<long unsigned int, 3>{
+                              std::array<uint32_t, 3>{
                                   v0, cs.face[*firstelement], v1});
                           firstelement = vindices.erase(firstelement);
 
                           switch (switcher) {
                           case 1:
-                            rv1 = {cs.vxc[v0] -
-                                       cs.vxc[cs.face[*prev2]],
-                                   cs.vyc[v0] -
-                                       cs.vyc[cs.face[*prev2]]};
-                            rv2 = {cs.vxc[v1] -
-                                       cs.vxc[cs.face[*prev2]],
-                                   cs.vyc[v1] -
-                                       cs.vyc[cs.face[*prev2]]};
+                            rv1 = {
+                                cs.vpc[v0*3] - cs.vpc[cs.face[*prev2]*3],
+                                cs.vpc[v0*3+1] - cs.vpc[cs.face[*prev2]*3+1]};
+                            rv2 = {
+                                cs.vpc[v1*3] - cs.vpc[cs.face[*prev2]*3],
+                                cs.vpc[v1*3+1] - cs.vpc[cs.face[*prev2]*3+1]};
                             if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
                               reflex.erase(*prev1);
                             }
                             break;
                           case 2:
-                            rv1 = {cs.vxc[v1] - cs.vxc[v0],
-                                   cs.vyc[v1] - cs.vyc[v0]};
-                            rv2 = {cs.vxc[v2] - cs.vxc[v0],
-                                   cs.vyc[v2] - cs.vyc[v0]};
+                            rv1 = {cs.vpc[v1*3] - cs.vpc[v0*3],
+                                  cs.vpc[v1*3+1] - cs.vpc[v0*3+1]};
+                            rv2 = {cs.vpc[v2*3] - cs.vpc[v0*3],
+                                  cs.vpc[v2*3+1] - cs.vpc[v0*3+1]};
                             if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
                               reflex.erase(*firstelement);
 
@@ -1345,11 +1336,11 @@ public:
                         valid = false;
                         for (size_t j = 0; j < reflex.size(); j++) {
                           std::array<float, 2> p = {
-                              cs.vxc[cs.face[*(std::next(reflex.begin(), j))]],
-                              cs.vyc[cs.face[*(std::next(reflex.begin(), j))]]}; // the vertex of the polygon
-                          std::array<float, 2> tp1 = {cs.vxc[v0], cs.vyc[v0]};
-                          std::array<float, 2> tp2 = {cs.vxc[v1], cs.vyc[v1]};
-                          std::array<float, 2> tp3 = {cs.vxc[v2], cs.vyc[v2]};
+                              cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3],
+                              cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+1]}; // the vertex of the polygon
+                          std::array<float, 2> tp1 = {cs.vpc[v0*3], cs.vpc[v0*3+1]};
+                          std::array<float, 2> tp2 = {cs.vpc[v1*3], cs.vpc[v1*3+1]};
+                          std::array<float, 2> tp3 = {cs.vpc[v2*3], cs.vpc[v2*3+1]};
                           struct CPpair {
                             float ad = 0;
                             float bc = 0;
@@ -1395,7 +1386,7 @@ public:
                         }
                         if (valid == false) {
                           cs.triangles.emplace_back(
-                              std::array<long unsigned int, 3>{
+                              std::array<uint32_t, 3>{
                                   v0, cs.face[*firstelement], v1});
                           firstelement = vindices.erase(firstelement);
                           firstelement++;
@@ -1421,7 +1412,7 @@ public:
       }
       else
       {
-        cs.triangles.emplace_back(std::array<long unsigned int, 3>{
+        cs.triangles.emplace_back(std::array<uint32_t, 3>{
             cs.face[0], cs.face[1],
             cs.face[2]}); // we pass on shapes, that are triangles
       }
@@ -1439,17 +1430,17 @@ void MoellerTrumbore(uint32_t vecnum, uint32_t coordnum)
   {
     size_t j = cs.usable[i];
     std::array<float, 3> v0 = {
-        cs.vxc[cs.triangles[j][0]] - ray.stpxcoords[vecnum],
-        cs.vyc[cs.triangles[j][0]] - ray.stpycoords[vecnum],
-        cs.vzc[cs.triangles[j][0]] - ray.stpzcoords[vecnum]};
+        cs.vpc[cs.triangles[j][0]*3] - ray.stpxcoords[vecnum],
+        cs.vpc[cs.triangles[j][0]*3+1] - ray.stpycoords[vecnum],
+        cs.vpc[cs.triangles[j][0]*3+2] - ray.stpzcoords[vecnum]};
     std::array<float, 3> v1 = {
-        cs.vxc[cs.triangles[j][1]] - ray.stpxcoords[vecnum],
-        cs.vyc[cs.triangles[j][1]] - ray.stpycoords[vecnum],
-        cs.vzc[cs.triangles[j][1]] - ray.stpzcoords[vecnum]};
+        cs.vpc[cs.triangles[j][1]*3] - ray.stpxcoords[vecnum],
+        cs.vpc[cs.triangles[j][1]*3+1] - ray.stpycoords[vecnum],
+        cs.vpc[cs.triangles[j][1]*3+2] - ray.stpzcoords[vecnum]};
     std::array<float, 3> v2 = {
-        cs.vxc[cs.triangles[j][2]] - ray.stpxcoords[vecnum],
-        cs.vyc[cs.triangles[j][2]] - ray.stpycoords[vecnum],
-        cs.vzc[cs.triangles[j][2]] - ray.stpzcoords[vecnum]};
+        cs.vpc[cs.triangles[j][2]*3] - ray.stpxcoords[vecnum],
+        cs.vpc[cs.triangles[j][2]*3+1] - ray.stpycoords[vecnum],
+        cs.vpc[cs.triangles[j][2]*3+2] - ray.stpzcoords[vecnum]};
     std::array<float, 3> edge1 = {v1[0] - v0[0], v1[1] - v0[1],
                                   v1[2] - v0[2]};
     std::array<float, 3> edge2 = {v2[0] - v0[0], v2[1] - v0[1],
@@ -1508,7 +1499,7 @@ void MoellerTrumbore(uint32_t vecnum, uint32_t coordnum)
 }
 };
 
-class Transformation : public objIdent{
+/*class Transformation : public objIdent{
 public:
 
     
@@ -1526,11 +1517,11 @@ public:
     // applies the same transition in one dimension on every single vertex
     switch (dimension) {
     case dimlane::X:
-      for (size_t i = 0; i < cs.vxc.size(); i++) {
-        float trans = cs.vxc[i] + length;
+      for (size_t i = 0; i < (cs.vpc.size()/3); i++) {
+        float trans = cs.vpc[i*3] + length;
         cs.tvxc.push_back(trans);
       }
-      cs.vxc.swap(cs.tvxc);
+      cs.vpc.swap(cs.tvxc);
       cs.tvxc.clear();
       break;
 
@@ -1611,5 +1602,5 @@ public:
     }
 }
 };
-
+*/
 #endif 

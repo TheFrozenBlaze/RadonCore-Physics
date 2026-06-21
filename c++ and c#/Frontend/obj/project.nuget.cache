@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "3/65tG+pMHY=",
+  "dgSpecHash": "ynSstA8EXTg=",
   "success": true,
-  "projectFilePath": "/home/matyas/Documents/3Dengine/c++ and c#/Frontend/Frontend.csproj",
+  "projectFilePath": "/home/matyas/Downloads/3Dengine/c++ and c#/Frontend/Frontend.csproj",
   "expectedPackageFiles": [
     "/home/matyas/.nuget/packages/opentk/4.9.4/opentk.4.9.4.nupkg.sha512",
     "/home/matyas/.nuget/packages/opentk.audio.openal/4.9.4/opentk.audio.openal.4.9.4.nupkg.sha512",

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/matyas/Documents/3Dengine/c++ and c#/Frontend/Frontend.csproj": {}
+    "/home/matyas/Downloads/3Dengine/c++ and c#/Frontend/Frontend.csproj": {}
   },
   "projects": {
-    "/home/matyas/Documents/3Dengine/c++ and c#/Frontend/Frontend.csproj": {
+    "/home/matyas/Downloads/3Dengine/c++ and c#/Frontend/Frontend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/matyas/Documents/3Dengine/c++ and c#/Frontend/Frontend.csproj",
+        "projectUniqueName": "/home/matyas/Downloads/3Dengine/c++ and c#/Frontend/Frontend.csproj",
         "projectName": "Frontend",
-        "projectPath": "/home/matyas/Documents/3Dengine/c++ and c#/Frontend/Frontend.csproj",
+        "projectPath": "/home/matyas/Downloads/3Dengine/c++ and c#/Frontend/Frontend.csproj",
         "packagesPath": "/home/matyas/.nuget/packages/",
-        "outputPath": "/home/matyas/Documents/3Dengine/c++ and c#/Frontend/obj/",
+        "outputPath": "/home/matyas/Downloads/3Dengine/c++ and c#/Frontend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/matyas/.nuget/NuGet/NuGet.Config"
