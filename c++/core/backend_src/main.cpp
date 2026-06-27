@@ -12,14 +12,18 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-               
+std::vector<Coord> objIdent::objects;        
 int main() {
+
     objIdent obj;
 
-
-    obj.objReader("/home/matyas/Downloads/humanoid_quad.obj");
+    obj.objReader("../../example/humanoid_quad.obj");
     for(size_t i =0; i< obj.objects[0].triangles.size(); i++) {
         std::cout << "Triangle: "<< obj.objects[0].triangles[i][0] << " " << obj.objects[0].triangles[i][1] << " " << obj.objects[0].triangles[i][2] << std::endl;
+    };
+    obj.objReader("../../example/monkey.obj");
+    for(size_t i =0; i< obj.objects[1].triangles.size(); i++) {
+        std::cout << "Triangle: "<< obj.objects[1].triangles[i][0] << " " << obj.objects[1].triangles[i][1] << " " << obj.objects[1].triangles[i][2] << std::endl;
     };
     /*obj.objects[0].stpxcoords.push_back(2.0f);
     obj.objects[0].stpycoords.push_back(0.0f);

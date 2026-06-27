@@ -117,6 +117,8 @@ public:
                   if (i == line.size() - 1 && line[i] != ' ')
                   { // end of line write
                       numberstring.push_back(line[i]);
+                      
+                      
                       cs.face.emplace_back((std::stoi(numberstring)+(cs.vpc.size())/3) % (cs.vpc.size()/3 + 1));
                       numberstring.clear();
                       Triangulator(objects.size()-1);
@@ -129,6 +131,7 @@ public:
                     point = 0;
                     continue;
                     } else {
+                      
                       cs.face.emplace_back((std::stoi(numberstring)+(cs.vpc.size())/3) % (cs.vpc.size()/3 + 1));                    
                       numberstring.clear();
                     }
@@ -138,7 +141,9 @@ public:
               } else {
                 if (line[i] == '/')
                   {
-                    cs.face.emplace_back((std::stoi(numberstring)+(cs.vpc.size())/3) % (cs.vpc.size()/3 + 1));
+                    if(numberstring.empty())
+                      continue;
+                    cs.face.emplace_back((std::stoi(numberstring) + (cs.vpc.size()) / 3) % (cs.vpc.size() / 3 + 1));
                     numberstring.clear();
                     point = 1;
                     continue;
@@ -1601,6 +1606,6 @@ public:
       break;
     }
 }
-};
-*/
+};*/
+
 #endif 

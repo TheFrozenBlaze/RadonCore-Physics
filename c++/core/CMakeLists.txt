@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 add_executable(Radon
-	#backend_src/main.cpp
+	#ackend_src/main.cpp
 	#backend_src/cl/opencl.c
 	#frontend_src/volk.c
 	frontend_src/main.cpp
@@ -17,14 +17,21 @@ add_executable(Radon
 
 target_include_directories(Radon PRIVATE
 	${CMAKE_SOURCE_DIR}/lib
-	${CMAKE_SOURCE_DIR}/include/SDL/include
 	${CMAKE_SOURCE_DIR}/include
 
 )
-link_directories(${CMAKE_SOURCE_DIR}/include/SDL/build/libSDL3.so)
-target_link_libraries(Radon PRIVATE ${CMAKE_SOURCE_DIR}/include/SDL/build/libSDL3.so)
+find_package(SDL3 QUIET)
 
-message(STATUS "SDL3 include: ${CMAKE_SOURCE_DIR}/include/SDL/include")
-file(GLOB SDL3_HEADERS "${CMAKE_SOURCE_DIR}/include/SDL/include/SDL3/*.h")
-message(STATUS "SDL3 headers: ${SDL3_HEADERS}")
+if(NOT SDL3_FOUND)
+	include(FetchContent)
+	FetchContent_Declare(
+		SDL3
+		GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+		GIT_TAG release-3.2.18
+	)
+
+	FetchContent_MakeAvaileable(SDL3)
+	endif()
+target_link_libraries(Radon PRIVATE SDL3::SDL3)
+
 

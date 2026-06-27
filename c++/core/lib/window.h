@@ -5,6 +5,7 @@ class Window{
     private:
     SDL_Window *window;
     SDL_GLContext glContext;
+    bool MMB();
 
 public:
     void Init();
