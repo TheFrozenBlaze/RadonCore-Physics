@@ -110,7 +110,7 @@ public:
           int number = 0;
           std::string numberstring; // loads the integers here
 
-          for (size_t i = 0; i < line.size(); i++)
+          for (size_t i {}; i < line.size(); i++)
           {
               if (line[i] == ' ' || i == line.size() - 1)
               { // where to write

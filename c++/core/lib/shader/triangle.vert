@@ -12,3 +12,4 @@ void main()
     gl_Position = perspective * translation *   vec4(aPos, 1.0);
     ourColor = aColor;
 }
+

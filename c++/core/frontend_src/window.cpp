@@ -150,8 +150,8 @@ void Window::Init()
                     }
                         else if ((e.type == SDL_EVENT_MOUSE_MOTION && MMB()))
                         {
-                            std::cout << "sensing" << std::endl;
-                            std::cout << "xrel: " << e.motion.xrel << " " << "yrel: " << e.motion.yrel << std::endl;
+                            //std::cout << "sensing" << std::endl;
+                            //std::cout << "xrel: " << e.motion.xrel << " " << "yrel: " << e.motion.yrel << std::endl;
                             //std::cout << "xrelvec: " << (GL::gCameraDesc[0][0] - GL::gCamera[0]) << " "<<(GL::gCameraDesc[1][0] - GL::gCamera[0])<< " "<<(GL::gCameraDesc[2][0] - GL::gCamera[0])<< std::endl;
                             //std::cout << "xrot up: " << GL::gCameraDesc[1][0] << " "<<GL::gCameraDesc[1][1]<< " "<<GL::gCameraDesc[1][2]<< std::endl;
                             //std::cout << "xrot side: " << GL::gCameraDesc[2][0] << " "<<GL::gCameraDesc[2][1]<< " "<<GL::gCameraDesc[2][2]<< std::endl;
@@ -160,19 +160,19 @@ void Window::Init()
                                 GL::gCameraDesc[0][1],
                                 GL::gCamera[2] + (static_cast<float>((GL::gCameraDesc[0][2] - GL::gCamera[2]) * cos(rad * e.motion.xrel * 0.1) + (GL::gCameraDesc[0][0] - GL::gCamera[0]) * (-sin(rad * e.motion.xrel * 0.1))))
                                 };
-                                std::cout << "xrot forw: " << GL::gCameraDesc[0][0] << " "<<GL::gCameraDesc[0][1]<< " "<<GL::gCameraDesc[0][2]<< std::endl;
+                            //std::cout << "xrot forw: " << GL::gCameraDesc[0][0] << " "<<GL::gCameraDesc[0][1]<< " "<<GL::gCameraDesc[0][2]<< std::endl;
                             GL::gCameraDesc[1] = {
                                 GL::gCamera[0] + (static_cast<float>((GL::gCameraDesc[1][2] - GL::gCamera[2]) * sin(rad * e.motion.xrel * 0.1) + (GL::gCameraDesc[1][0] - GL::gCamera[0]) * cos(rad * e.motion.xrel * 0.1))),
                                 GL::gCameraDesc[1][1],
                                 GL::gCamera[2] + (static_cast<float>((GL::gCameraDesc[1][2] - GL::gCamera[2]) * cos(rad * e.motion.xrel * 0.1) + (GL::gCameraDesc[1][0] - GL::gCamera[0]) * (-sin(rad * e.motion.xrel * 0.1))))
                                 };
-                                std::cout << "xrot up: " << GL::gCameraDesc[1][0] << " "<<GL::gCameraDesc[1][1]<< " "<<GL::gCameraDesc[1][2]<< std::endl;
+                            //std::cout << "xrot up: " << GL::gCameraDesc[1][0] << " "<<GL::gCameraDesc[1][1]<< " "<<GL::gCameraDesc[1][2]<< std::endl;
                             GL::gCameraDesc[2] = {
                                 GL::gCamera[0] + (static_cast<float>((GL::gCameraDesc[2][2] - GL::gCamera[2]) * sin(rad * e.motion.xrel * 0.1) + (GL::gCameraDesc[2][0] - GL::gCamera[0]) * cos(rad * e.motion.xrel * 0.1))),
                                 GL::gCameraDesc[2][1],
                                 GL::gCamera[2] + (static_cast<float>((GL::gCameraDesc[2][2] - GL::gCamera[2]) * cos(rad * e.motion.xrel * 0.1) + (GL::gCameraDesc[2][0] - GL::gCamera[0]) * (-sin(rad * e.motion.xrel * 0.1))))
                                 };
-                                std::cout << "xrot side: " << GL::gCameraDesc[2][0] << " "<<GL::gCameraDesc[2][1]<< " "<<GL::gCameraDesc[2][2]<< std::endl;
+                            //std::cout << "xrot side: " << GL::gCameraDesc[2][0] << " "<<GL::gCameraDesc[2][1]<< " "<<GL::gCameraDesc[2][2]<< std::endl;
                             //std::cout << "sin: " <<  sin(rad * e.motion.xrel * 0.1) << " " << "cos: "<< cos(rad * e.motion.xrel * 0.1) << std::endl;
                             //std::cout << "sin: " <<  sin(rad * e.motion.yrel * 0.1) << " " << "cos: "<< cos(rad * e.motion.yrel * 0.1) << std::endl;
                             //std::cout << "xrot forw: " << GL::gCameraDesc[0][0] << " "<<GL::gCameraDesc[0][1]<< " "<<GL::gCameraDesc[0][2]<< std::endl;
@@ -182,17 +182,17 @@ void Window::Init()
                                                    GL::gCamera[1] + (static_cast<float>((GL::gCameraDesc[0][1] - GL::gCamera[1]) * cos(rad * e.motion.yrel * 0.1) + (GL::gCameraDesc[0][2] - GL::gCamera[2]) * (-sin(rad * e.motion.yrel * 0.1)))),
                                                    GL::gCamera[2] + (static_cast<float>((GL::gCameraDesc[0][1] - GL::gCamera[1]) * sin(rad * e.motion.yrel * 0.1) + (GL::gCameraDesc[0][2] - GL::gCamera[2]) * cos(rad * e.motion.yrel * 0.1)))
                                                 };
-                            std::cout << "yrot forw: " << GL::gCameraDesc[0][0] << " " << GL::gCameraDesc[0][1]<< " " << GL::gCameraDesc[0][2]<< std::endl;
+                            //std::cout << "yrot forw: " << GL::gCameraDesc[0][0] << " " << GL::gCameraDesc[0][1]<< " " << GL::gCameraDesc[0][2]<< std::endl;
                             GL::gCameraDesc[1] = {GL::gCameraDesc[1][0],
                                                   GL::gCamera[1] + (static_cast<float>((GL::gCameraDesc[1][1] - GL::gCamera[1]) * cos(rad * e.motion.yrel * 0.1) + (GL::gCameraDesc[1][2] - GL::gCamera[2]) * (-sin(rad * e.motion.yrel * 0.1)))),
                                                   GL::gCamera[2] + (static_cast<float>((GL::gCameraDesc[1][1] - GL::gCamera[1]) * sin(rad * e.motion.yrel * 0.1) + (GL::gCameraDesc[1][2] - GL::gCamera[2]) * cos(rad * e.motion.yrel * 0.1)))
                                                 };
-                            std::cout << "yrot up: " << GL::gCameraDesc[1][0] << " " << GL::gCameraDesc[1][1]<< " " << GL::gCameraDesc[1][2]<< std::endl;
+                            //std::cout << "yrot up: " << GL::gCameraDesc[1][0] << " " << GL::gCameraDesc[1][1]<< " " << GL::gCameraDesc[1][2]<< std::endl;
                             GL::gCameraDesc[2] = {GL::gCameraDesc[2][0],
                                                   GL::gCamera[1] + (static_cast<float>((GL::gCameraDesc[2][1] - GL::gCamera[1]) * cos(rad * e.motion.yrel * 0.1) + (GL::gCameraDesc[2][2] - GL::gCamera[2]) * (-sin(rad * e.motion.yrel * 0.1)))),
                                                   GL::gCamera[2] + (static_cast<float>((GL::gCameraDesc[2][1] - GL::gCamera[1]) * sin(rad * e.motion.yrel * 0.1) + (GL::gCameraDesc[2][2] - GL::gCamera[2]) * cos(rad * e.motion.yrel * 0.1)))
                                                 };
-                            std::cout << "yrot side: " << GL::gCameraDesc[2][0] << " " << GL::gCameraDesc[2][1]<< " " << GL::gCameraDesc[2][2]<< std::endl;
+                            //std::cout << "yrot side: " << GL::gCameraDesc[2][0] << " " << GL::gCameraDesc[2][1]<< " " << GL::gCameraDesc[2][2]<< std::endl;
                             //std::cout << "yrot forw: " << GL::gCameraDesc[0][0] << " " << GL::gCameraDesc[0][1]<< " " << GL::gCameraDesc[0][2]<< std::endl;
                             //std::cout << "yrot up: " << GL::gCameraDesc[1][0] << " " << GL::gCameraDesc[1][1]<< " " << GL::gCameraDesc[1][2]<< std::endl;
                             //std::cout << "yrot side: " << GL::gCameraDesc[2][0] << " " << GL::gCameraDesc[2][1]<< " " << GL::gCameraDesc[2][2]<< std::endl;
