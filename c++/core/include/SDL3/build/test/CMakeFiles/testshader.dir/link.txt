@@ -1,0 +1,1 @@
+/usr/bin/cc -O2 -g -DNDEBUG CMakeFiles/testshader.dir/testshader.c.o CMakeFiles/sdltests_utils.dir/testutils.c.o -o testshader  -Wl,-rpath,/home/matyas/Downloads/3Dengine/c++/core/include/SDL3/build ../libSDL3_test.a ../libSDL3.so.0.5.0 /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so 

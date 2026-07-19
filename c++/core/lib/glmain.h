@@ -14,8 +14,8 @@ namespace GL
     extern std::array<std::array<float,3>, 3> gCameraDesc;
     extern std::vector<GLuint> VAOvec;
     extern std::vector<GLuint> pVBOvec;
-    extern std::vector<GLuint> cVBOvec;
     extern std::vector<GLuint> EBOvec;
+    extern std::vector<GLuint> lEBOvec;
     void Compile(const std::vector<std::string> &files);
     void Draw(uint16_t* screenWidth, uint16_t* screenHeight); 
     

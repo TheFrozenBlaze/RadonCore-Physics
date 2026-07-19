@@ -13,22 +13,23 @@ add_executable(Radon
 	frontend_src/window.cpp
 	frontend_src/glmain.cpp
 	frontend_src/glad.c
-	include/ImGUI/imgui.cpp
-    include/ImGUI/imgui_draw.cpp
-    include/ImGUI/imgui_tables.cpp
-    include/ImGUI/imgui_widgets.cpp
-    include/ImGUI/backends/imgui_impl_sdl3.cpp
-    include/ImGUI/backends/imgui_impl_opengl3.cpp
+	#include/ImGUI/imgui.cpp
+    #include/ImGUI/imgui_draw.cpp
+    #include/ImGUI/imgui_tables.cpp
+    #include/ImGUI/imgui_widgets.cpp
+    #include/ImGUI/backends/imgui_impl_sdl3.cpp
+    #include/ImGUI/backends/imgui_impl_opengl3.cpp
 )
 
 target_include_directories(Radon PRIVATE
 	${CMAKE_SOURCE_DIR}/lib
 	${CMAKE_SOURCE_DIR}/include
-	${CMAKE_SOURCE_DIR}/include/ImGUI/
-    ${CMAKE_SOURCE_DIR}/include/ImGUI/backends
+	${CMAKE_SOURCE_DIR}/include/SDL3/include
+	#${CMAKE_SOURCE_DIR}/include/ImGUI/
+    #${CMAKE_SOURCE_DIR}/include/ImGUI/backends
 
 )
-find_package(SDL3 REQUIRED)
+#find_package(SDL3 REQUIRED)
 
 #if(NOT SDL3_FOUND)
 #	include(FetchContent)
@@ -41,16 +42,17 @@ find_package(SDL3 REQUIRED)
 #	FetchContent_MakeAvailable(SDL3)
 #	endif()
 
-find_package(OpenCL REQUIRED)
+#find_package(OpenCL REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(Vulkan QUIET)
-
+#find_package(Vulkan QUIET)
+link_directories(${CMAKE_SOURCE_DIR}/include/SDL3/build/libSDL3.so)
+target_link_libraries(Radon PRIVATE ${CMAKE_SOURCE_DIR}/include/SDL3/build/libSDL3.so)
 
 target_link_libraries(Radon PRIVATE 
-					  SDL3::SDL3
-					  OpenCL::OpenCL
+					  #SDL3::SDL3
+					  #OpenCL::OpenCL
 					  OpenGL::GL
-					  Vulkan::Vulkan
+					  #Vulkan::Vulkan
 					  )
 
 

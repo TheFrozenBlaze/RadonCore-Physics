@@ -3,33 +3,44 @@
 
 #include <cstdint>
 #include "physlayers.h"
+#include <chrono>
+struct SimDet {
+	std::vector<std::array<float, 3>> forces;
+	uint start;
+	uint finish;
+	Coord& cs;
+    Material* bodmat;
+	uint8_t meshboost;
+};
+
+typedef struct SimDef {
+	std::chrono::duration<double, std::milli> simdur;
+	uint tiles;
+    double system_energy;
+    Material *surmats;
+    std::vector<SimDet *> action;
+};
+struct InitSettings {
+    std::vector<std::pair<std::array<float, 3>, Coord &>> speed;
+};
 
 namespace Physics
 {
-    enum class PhysLayersFlags : uint16_t
+    enum PhysLayersFlags 
     {
-        None = 0,
-        Basic = 1 << 0,
-        Planetary = 1 << 1,
-        Thermal = 1 << 2,
-        Fluid = 1 << 3,
-        Restrictive = 1 << 4,
-        Photo = 1 << 5,
-        Radioactive = 1 << 6,
-        Aero = 1 << 7,
-        Electrical = 1 << 8,
-        Structural = 1 << 9
+        None,
+        Basic,
+        Planetary,
+        Thermal,
+        Fluid,
+        Restrictive,
+        Photo,
+        Radioactive,
+        Aero,
+        Electrical,
+        Structural
     };
-    #define BASIC 0x01
-    #define PLANETARY 0x02
-    #define THERMAL 0x04
-    #define FLUID 0x08
-    #define RESTRICTIVE 0x16
-    #define PHOTO 0x32
-    #define RADIOACTIVE 0x364
-    #define AERO 0x128
-    #define ELECTRICAL 0x256
-    #define STRUCTURAL 0x512
+
 
     inline PhysLayersFlags operator|(PhysLayersFlags a, PhysLayersFlags b)
 	{
@@ -37,15 +48,15 @@ namespace Physics
 			static_cast<uint32_t>(a) |
 			static_cast<uint32_t>(b));
 	};
-
+    extern 
 	inline PhysLayersFlags operator&(PhysLayersFlags a, PhysLayersFlags b)
 	{
 		return static_cast<PhysLayersFlags>(
 			static_cast<uint32_t>(a) &
 			static_cast<uint32_t>(b));
 	};
-
-    void ConstructSim(PhysLayersFlags flags);
-    void StartSim();
+    SimDef *ConstructSim(std::vector<Coord>& cs);
+    InitSettings PreSimState(SimDef* def);
+    bool StartSim(SimDef* def, enum Physics::PhysLayersFlags flags, InitSettings& init);
 };
 #endif

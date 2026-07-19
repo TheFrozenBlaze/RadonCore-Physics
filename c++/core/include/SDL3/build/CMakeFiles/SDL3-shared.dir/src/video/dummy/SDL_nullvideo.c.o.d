@@ -1,0 +1,30 @@
+CMakeFiles/SDL3-shared.dir/src/video/dummy/SDL_nullvideo.c.o: \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/SDL_nullvideo.c \
+ /usr/include/stdc-predef.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/SDL_internal.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../SDL_sysvideo.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/include/SDL3/SDL_vulkan.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/include/SDL3/SDL_stdinc.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/include/SDL3/SDL_error.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/include/SDL3/SDL_video.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/include/SDL3/SDL_begin_code.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/include/SDL3/SDL_close_code.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../SDL_surface_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../SDL_blit.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../SDL_pixels_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_events_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/../video/SDL_sysvideo.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_clipboardevents_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_displayevents_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_dropevents_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_keyboard_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_keymap_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_mouse_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_touch_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_pen_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/../SDL_internal.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../events/SDL_windowevents_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/../../core/linux/SDL_evdev.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/SDL_nullvideo.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/SDL_nullevents_c.h \
+ /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/video/dummy/SDL_nullframebuffer_c.h

@@ -11,6 +11,7 @@
 #include <list>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -18,6 +19,7 @@
 
 struct Coord {
 public:
+
     // vertices
     std::vector<float> vpc;
     //vertex normals
@@ -34,6 +36,7 @@ public:
     std::vector<uint32_t> face;
     std::vector<std::vector<uint32_t>> intersections;
     std::array<std::array<float, 3>, 6> detailes;
+    std::vector<uint32_t> edge;
 };
 class Rays {
   public:
@@ -71,9 +74,16 @@ public:
 };
 class objIdent {
 public:
+inline uint64_t MakeEdge(uint32_t a, uint32_t b)
+{
+    if (a > b)
+        std::swap(a, b);
+
+    return (static_cast<uint64_t>(a) << 32) | b;
+}
     static std::vector<Coord> objects;
     
-    void objReader(const std::string &filename) {
+    bool objReader(const std::string &filename) {
       objects.emplace_back();
       Coord &cs = objects.back();
       std::array<float, 3> minx, maxx, miny, maxy, minz, maxz;
@@ -81,7 +91,7 @@ public:
       if (!file.is_open())
       {
         std::cout << "Error reading file: " << filename << std::endl;
-        return;
+        return false;
       }
 
     std::string line;
@@ -156,12 +166,21 @@ public:
         }
     cs.vpc.shrink_to_fit();
     cs.face.shrink_to_fit();
+    if(cs.vpc.size() == 0) {
+      std::cout << "Something went wrong with the coords" << std::endl;
+      return false;
+    }
+    if(cs.face.size() == 0) {
+      std::cout << "something went wrong with the faces" << std::endl;
+      return false;
+    }
     cs.detailes[0] = minx;
     cs.detailes[1] = maxx;
     cs.detailes[2] = miny;
     cs.detailes[3] = maxy;
     cs.detailes[4] = minz;
     cs.detailes[5] = maxz;
+    return true;
     };
 
   // Check vector intersection
@@ -264,1157 +283,1362 @@ public:
   // excruciating process, and I would have probably never finished it, so thank
   // you 3Blue1Brown!
   void Triangulator(uint32_t coordnum) {
-    Coord& cs = objects[coordnum];
-      float limit = 1e-6; // basicaly zero
-      std::array<float, 3> normal = {0.0, 0.0, 0.0};
-      uint8_t projection = 0;
-      if (cs.face.size() > 3) {
-        normal = {0.0, 0.0, 0.0};
-        float x, y, z, coordy, coordx, coordz;
-        int f = 1;
-        while (
-            normal ==
-            std::array<float, 3>{
-                0.0f, 0.0f,
-                0.0f}) { // calculatin the normal of the face based on it's
-                         // vertices, if the normal is 0, then the face is
-                         // degenerate and we will try to calculate the normal
-                         // with different vertices until we get a non
-                         // degenerate normal or we run out of vertices to try
-          if (f + 1 == cs.face.size()) {
-            std::cout << "INVALID FACE" << std::endl;
-            break;
-          } else {
-            coordx = (cs.vpc[cs.face[f]*3+1] -
-                      cs.vpc[cs.face[0]*3+1]) *
-                         (cs.vpc[cs.face[1 + f]*3+2] -
-                          cs.vpc[cs.face[0]*3+2]) -
-                     (cs.vpc[cs.face[1 + f]*3+1] -
-                      cs.vpc[cs.face[0]*3+1]) *
-                         (cs.vpc[cs.face[f]*3+2] -
-                          cs.vpc[cs.face[0]*3+2]);
-            coordy = (cs.vpc[cs.face[f]*3 +2] -
-                      cs.vpc[cs.face[0]*3 +2]) *
-                         (cs.vpc[cs.face[1 + f]*3] -
-                          cs.vpc[cs.face[0]*3]) -
-                     (cs.vpc[cs.face[1 + f]*3 +2] -
-                      cs.vpc[cs.face[0]*3 +2]) *
-                         (cs.vpc[cs.face[f]*3] -
-                          cs.vpc[cs.face[0]*3]);
-            coordz = (cs.vpc[cs.face[f]*3] -
-                      cs.vpc[cs.face[0]*3]) *
-                         (cs.vpc[cs.face[1 + f]*3+1] -
-                          cs.vpc[cs.face[0]*3 +1]) -
-                     (cs.vpc[cs.face[1 + f]*3] -
-                      cs.vpc[cs.face[0]*3]) *
-                         (cs.vpc[cs.face[f]*3+1] -
-                          cs.vpc[cs.face[0]*3+1]);
-            x = limit > std::fabs(coordx) && std::fabs(coordx) >= 0 ? 0.0f
-                                                                    : coordx;
-            y = limit > std::fabs(coordy) && std::fabs(coordy) >= 0 ? 0.0f
-                                                                    : coordy;
-            z = limit > std::fabs(coordz) && std::fabs(coordz) >= 0 ? 0.0f
-                                                                    : coordz;
-            normal = {x, y, z};
-            f++;
+    std::unordered_set<uint64_t> edgeIndexSet;
+    Coord &cs = objects[coordnum];
+    float limit = 1e-6; // basicaly zero
+    std::array<float, 3> normal = {0.0, 0.0, 0.0};
+    uint8_t projection = 0;
+    if (cs.face.size() > 3)
+    {
+      normal = {0.0, 0.0, 0.0};
+      float x, y, z, coordy, coordx, coordz;
+      int f = 1;
+      while (
+          normal ==
+          std::array<float, 3>{
+              0.0f, 0.0f,
+              0.0f})
+      { // calculatin the normal of the face based on it's
+        // vertices, if the normal is 0, then the face is
+        // degenerate and we will try to calculate the normal
+        // with different vertices until we get a non
+        // degenerate normal or we run out of vertices to try
+        if (f + 1 == cs.face.size())
+        {
+          std::cout << "INVALID FACE" << std::endl;
+          break;
+        }
+        else
+        {
+          coordx = (cs.vpc[cs.face[f] * 3 + 1] -
+                    cs.vpc[cs.face[0] * 3 + 1]) *
+                       (cs.vpc[cs.face[1 + f] * 3 + 2] -
+                        cs.vpc[cs.face[0] * 3 + 2]) -
+                   (cs.vpc[cs.face[1 + f] * 3 + 1] -
+                    cs.vpc[cs.face[0] * 3 + 1]) *
+                       (cs.vpc[cs.face[f] * 3 + 2] -
+                        cs.vpc[cs.face[0] * 3 + 2]);
+          coordy = (cs.vpc[cs.face[f] * 3 + 2] -
+                    cs.vpc[cs.face[0] * 3 + 2]) *
+                       (cs.vpc[cs.face[1 + f] * 3] -
+                        cs.vpc[cs.face[0] * 3]) -
+                   (cs.vpc[cs.face[1 + f] * 3 + 2] -
+                    cs.vpc[cs.face[0] * 3 + 2]) *
+                       (cs.vpc[cs.face[f] * 3] -
+                        cs.vpc[cs.face[0] * 3]);
+          coordz = (cs.vpc[cs.face[f] * 3] -
+                    cs.vpc[cs.face[0] * 3]) *
+                       (cs.vpc[cs.face[1 + f] * 3 + 1] -
+                        cs.vpc[cs.face[0] * 3 + 1]) -
+                   (cs.vpc[cs.face[1 + f] * 3] -
+                    cs.vpc[cs.face[0] * 3]) *
+                       (cs.vpc[cs.face[f] * 3 + 1] -
+                        cs.vpc[cs.face[0] * 3 + 1]);
+          x = limit > std::fabs(coordx) && std::fabs(coordx) >= 0 ? 0.0f
+                                                                  : coordx;
+          y = limit > std::fabs(coordy) && std::fabs(coordy) >= 0 ? 0.0f
+                                                                  : coordy;
+          z = limit > std::fabs(coordz) && std::fabs(coordz) >= 0 ? 0.0f
+                                                                  : coordz;
+          normal = {x, y, z};
+          f++;
+        }
+      }
+      /*std::cout << "Normal" << normal[0] << " Normal0" <<  normal[1] << "
+       * Normal1" << normal[2] << "Normal2" << std::endl;*/
+      f = 1;
+      float min = std::fabs(*std::min_element(normal.begin(), normal.end())),
+            max = std::fabs(*std::max_element(
+                normal.begin(),
+                normal.end())); // the absolute biggest element defines, which
+                                // way would the projection distort the least,
+                                // because of perpendicularity
+      // if a normal is more parallel with the, let's say, x, then the
+      // projection on the yz plane would be distorted the least => eliminates
+      // the risk of wrong detection
+      int8_t dor =
+          limit >= max - min && max - min >= 0 ? 0 : (max - min > 0 ? 1 : -1);
+      projection =
+          dor == 0
+              ? std::distance(normal.begin(),
+                              std::max_element(normal.begin(), normal.end()))
+          : dor > 0
+              ? std::distance(normal.begin(),
+                              std::max_element(normal.begin(), normal.end()))
+              : std::distance(
+                    normal.begin(),
+                    std::min_element(
+                        normal.begin(),
+                        normal.end())); // if the absolutes of the min and max
+                                        // are equal, then it's just easier to
+                                        // choose max
+      /*std::cout << "projection" << (int)projection << std::endl;*/
+      std::list<uint32_t> vindices;        // list for easy traversal and deletion of vertices
+      uint32_t v0, v1, v2;                 // used for triangle math
+      std::unordered_set<uint32_t> reflex; // reflex vertices, unordered set is useful because of find
+      std::array<float, 2> rv1;            // used for normal math
+      std::array<float, 2> rv2;
+      // std::cout << "I made it here" << std::endl;
+      switch (projection)
+      {
+      case 0:
+      {
+        std::list<uint32_t>::iterator back;
+        if (x > 0)
+        { // we are ordering here based on winding. The normal
+          // tells us, which way are the vertices ordered
+          for (size_t j{}; j < cs.face.size(); j++)
+          {
+            if (j < 2)
+            {
+              vindices.push_back(j);
+            }
+            else if (j >= 2 && j < cs.face.size() - 1)
+            {
+              vindices.push_back(j);
+              v2 = cs.face[j - 2]; // caLculating normals=> optimization compared to the last version
+              v1 = cs.face[j - 1];
+              v0 = cs.face[j];
+              rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(j - 1);
+              }
+            }
+            else
+            {
+              vindices.push_back(j);
+              v2 = cs.face[j - 2];
+              v1 = cs.face[j - 1];
+              v0 = cs.face[j];
+              rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(j - 1);
+              } // until here, the cycle is same as above
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[0];
+              rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(j); // calculating the reflexness of the last vertex
+              }
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[1];
+              rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(0); // calculating the reflexness of the first vertex => all reflexness is calculated
+              }
+            }
           }
         }
-        /*std::cout << "Normal" << normal[0] << " Normal0" <<  normal[1] << "
-         * Normal1" << normal[2] << "Normal2" << std::endl;*/
-        f = 1;
-        float min = std::fabs(*std::min_element(normal.begin(), normal.end())),
-              max = std::fabs(*std::max_element(
-                  normal.begin(),
-                  normal.end())); // the absolute biggest element defines, which
-                                  // way would the projection distort the least,
-                                  // because of perpendicularity
-        // if a normal is more parallel with the, let's say, x, then the
-        // projection on the yz plane would be distorted the least => eliminates
-        // the risk of wrong detection
-        int8_t dor =
-            limit >= max - min && max - min >= 0 ? 0 : (max - min > 0 ? 1 : -1);
-        projection =
-            dor == 0
-                ? std::distance(normal.begin(),
-                                std::max_element(normal.begin(), normal.end()))
-            : dor > 0
-                ? std::distance(normal.begin(),
-                                std::max_element(normal.begin(), normal.end()))
-                : std::distance(
-                      normal.begin(),
-                      std::min_element(
-                          normal.begin(),
-                          normal.end())); // if the absolutes of the min and max
-                                          // are equal, then it's just easier to
-                                          // choose max
-        /*std::cout << "projection" << (int)projection << std::endl;*/
-        std::list<uint32_t> vindices;//list for easy traversal and deletion of vertices
-        uint32_t v0, v1, v2; //used for triangle math
-        std::unordered_set<uint32_t> reflex; //reflex vertices, unordered set is useful because of find
-        std::array<float, 2> rv1; //used for normal math
-        std::array<float, 2> rv2;
-        //std::cout << "I made it here" << std::endl;
-        switch (projection)
+        else
         {
-        case 0: {
-          std::list<uint32_t>::iterator back;
-          if (x > 0) { // we are ordering here based on winding. The normal
-                       // tells us, which way are the vertices ordered
-            for (size_t j {}; j < cs.face.size(); j++) {
-              if (j < 2) {
-                vindices.push_back(j);
-              } else if (j >= 2 && j < cs.face.size() - 1) {
-                vindices.push_back(j);
-                v2 = cs.face[j - 2];//caLculating normals=> optimization compared to the last version 
-                v1 = cs.face[j - 1];
-                v0 = cs.face[j];
-                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
-                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
-                if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                  reflex.insert(j - 1);
-                }
-              } else {
-                vindices.push_back(j);
-                v2 = cs.face[j - 2];
-                v1 = cs.face[j - 1];
-                v0 = cs.face[j];
-                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
-                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
-                if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                  reflex.insert(j - 1);
-                } // until here, the cycle is same as above
-                v2 = v1;
-                v1 = v0;
-                v0 = cs.face[0];
-                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
-                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
-                if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                  reflex.insert(j); // calculating the reflexness of the last vertex
-                }
-                v2 = v1;
-                v1 = v0;
-                v0 = cs.face[1];
-                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
-                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
-                if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                  reflex.insert(0); //calculating the reflexness of the first vertex => all reflexness is calculated
-                }
-              }
-            }
-          } else {
-            for (size_t j {}; j < cs.face.size(); j++) {
-              if (j < 2) {
-                vindices.push_back(cs.face.size() - 1 - j);
-              } else if (j >= 2 && j < cs.face.size() - 1) {
-                vindices.push_back(cs.face.size() - 1 - j);
-                v2 = cs.face[cs.face.size() + 1 - j];
-                v1 = cs.face[cs.face.size() - j];
-                v0 = cs.face[cs.face.size() - 1 - j];
-                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
-                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
-                if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                  reflex.insert(cs.face.size() - j);
-                }
-              } else {
-                vindices.push_back(cs.face.size() - 1 - j);
-                v2 = cs.face[cs.face.size() + 1 - j];
-                v1 = cs.face[cs.face.size() - j];
-                v0 = cs.face[cs.face.size() - 1 - j];
-                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
-                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
-                if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                  reflex.insert(cs.face.size() - j);
-                } // until here, the cycle is same as above
-                v2 = v1;
-                v1 = v0;
-                v0 = cs.face[*(vindices.begin())];
-                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
-                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
-                if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                  reflex.insert(0);
-                }
-                v2 = v1;
-                v1 = v0;
-                v0 = cs.face[*(std::next(vindices.begin(), 1))];
-                rv1 = {cs.vpc[v1*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v1*3 +2] - cs.vpc[v2*3 +2]};
-                rv2 = {cs.vpc[v0*3 +1] - cs.vpc[v2*3 +1], cs.vpc[v0*3 +2] - cs.vpc[v2*3 + 2]};
-                if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                  reflex.insert(cs.face.size() - 1);
-                }
-              }
-            }
-            }
+          for (size_t j{}; j < cs.face.size(); j++)
+          {
+            if (j < 2)
             {
-              std::list<uint32_t>::iterator step = {
-                  std::next(vindices.begin(), 1)};
-              uint32_t reflexelement{0};
-              uint32_t switcher;
-              bool valid;
-              std::list<uint32_t>::iterator firstelement{vindices.begin()};
-              std::list<uint32_t>::iterator nextnext{
-                  std::next(vindices.begin(), 1)};
-              std::list<uint32_t>::iterator prev1{std::prev(vindices.end(), 1)};
-              std::list<uint32_t>::iterator prev2{std::prev(vindices.end(), 2)};
-              //std::cout << "I made it to while loop in case 0" << std::endl;
-              reflex.clear();
-              while (vindices.size() >= 3)
+              vindices.push_back(cs.face.size() - 1 - j);
+            }
+            else if (j >= 2 && j < cs.face.size() - 1)
+            {
+              vindices.push_back(cs.face.size() - 1 - j);
+              v2 = cs.face[cs.face.size() + 1 - j];
+              v1 = cs.face[cs.face.size() - j];
+              v0 = cs.face[cs.face.size() - 1 - j];
+              rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
               {
-                  if (reflex.empty() == 1)
-                  { // O(n) check for reflex vertices, if there are none, then we can be sure that all the triangles are valid,\
-                      // and we can just triangulate the rest of the polygon without checks=> imporvement compared to the last version,
-                      cs.triangles.emplace_back(std::array<uint32_t, 3>{
-                          cs.face[*vindices.begin()],
-                          cs.face[*step],
-                          cs.face[*(std::next(step, 1))]});
-                      step = vindices.erase(step);
-                      // std::cout<< "face valid" << std::endl;
-                      // std::cout k++;<< "I have removed: " << v1+1 << std::endl;
-                      // std::cout << "Triangle
-                      // "<<cs.triangles[cs.triangles.size()-1][0] << " " <<
-                      // cs.triangles[cs.triangles.size()-1][1] << " "<<
-                      // cs.triangles[cs.triangles.size()-1][2]<< std::endl;
-                  }
-                  else
-                  {
-                      if (reflex.find(*firstelement) != reflex.end())
-                      { // we can't cast a triangle with a reflex vertex
-                          firstelement++;
-                          nextnext++;
-                          prev1++;
-                          prev2++;
-                          nextnext = nextnext == vindices.end() ? vindices.begin()
-                                                                : nextnext;
-                          prev2 = prev2 == vindices.end() ? vindices.begin() : prev2;
-                          prev1 = prev1 == vindices.end() ? vindices.begin() : prev1;
-                          firstelement = firstelement == vindices.end()
-                                             ? vindices.begin()
-                                             : firstelement;
-                      }
-                      else
-                      {
-                          v0 = cs.face[*prev1];                   // first vertex of the triangle
-                          reflexelement = reflex.find(*prev1) == reflex.end() // calculate reflex vertices in the triangle
-                                              ? 0
-                                              : (1 && (switcher = 1));
-                          v1 = cs.face[*nextnext]; // the last vertex of the triangle
-                          reflexelement = reflex.find(*nextnext) == reflex.end()
-                                              ? (reflexelement && (switcher = 1))
-                                          : reflexelement == 0
-                                              ? (reflexelement && (switcher = 2))
-                                              : reflexelement += 1;
-                          v2 = cs.face[std::next(nextnext) == vindices.end() // getting the next vertex after the triangles 3 vertices for future normal calculations
-                                           ? *vindices.begin()
-                                           : *nextnext];
-
-                          // I've  broken down the triangle cast into 3 parts:
-                          // 1.) there are as much reflex vertices as there are relfex vertices in the potential triangle
-                          //=> we justhave to reevaluate the reflex vertices in the triangle
-                          // 2.) there are more reflex vertices than there are reflex vertices in the potential triangle
-                          //=> we have to both reeavaluate the reflex vertices in the triangle, and check the rest of the reflex vertices, whether they are in the triangle or not
-                          // 3.) there are 0 relfex vertices in the potential triangle
-                          //=> we just have to check for reflex vertices in the triangle
-                          if (reflexelement == reflex.size())
-                          {
-                              cs.triangles.emplace_back(
-                                  std::array<uint32_t, 3>{
-                                      v0, cs.face[*firstelement], v1});
-                              firstelement = vindices.erase(firstelement);
-                              nextnext++;
-                              switch (switcher)
-                              {
-                              case 1:
-                                  rv1 = {cs.vpc[v0*3+1] - cs.vpc[cs.face[*prev2]*3+1],
-                                         cs.vpc[v0*3+2] -
-                                             cs.vpc[cs.face[*prev2]*3 +2]};
-                                  rv2 = {cs.vpc[v1*3+1] - cs.vpc[cs.face[*prev2]*3+1],
-                                         cs.vpc[v1*3+2] -
-                                             cs.vpc[cs.face[*prev2]*3+2]};
-                                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
-                                  {
-                                      reflex.erase(*prev1);
-                                  }
-                                  break;
-                              case 2:
-                                  rv1 = {cs.vpc[v1*3+1] - cs.vpc[v0*3+2],
-                                         cs.vpc[v1*3+2] - cs.vpc[v0*3+2]};
-                                  rv2 = {cs.vpc[v2*3 +1] - cs.vpc[v0*3+1],
-                                         cs.vpc[v2*3+2] - cs.vpc[v0*3+2]};
-                                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
-                                  {
-                                      reflex.erase(*firstelement);
-
-                                      break;
-                                  }
-                              }
-                          }
-                          else if (reflexelement > 0)
-                          {
-                              valid = false;
-                              for (size_t j = 0; j < reflex.size(); j++)
-                              {
-                                  std::array<float, 2> p = {
-                                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+1],
-                                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+2]}; // the vertex of the polygon
-                                  std::array<float, 2> tp1 = {cs.vpc[v0*3+1], cs.vpc[v0*3+2]};
-                                  std::array<float, 2> tp2 = {cs.vpc[v1*3+1], cs.vpc[v1*3+2]};
-                                  std::array<float, 2> tp3 = {cs.vpc[v2*3+1], cs.vpc[v2*3+2]};
-                                  struct CPpair
-                                  {
-                                      float ad = 0;
-                                      float bc = 0;
-                                      float product = ad - bc;
-                                  } ABP, ACP, BCP;
-                                  ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
-                                  ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
-                                  ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
-                                  ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
-                                  BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
-                                  BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
-                                  ABP.product = ABP.ad - ABP.bc;
-                                  ACP.product = ACP.ad - ACP.bc;
-                                  BCP.product =
-                                      BCP.ad -
-                                      BCP.bc; // we are calculating the normals of the
-                                              // triangle's sides with an another polygon
-                                              // vertex//(obv. we are taking each side and
-                                              // the current vertex to it),
-                                  // we are taking the normal relative to a vertex of the
-                                  // potential triangle , and rotate through the triangle
-                                  // in ccw
-                                  valid = (ABP.product > limit) &&
-                                          (ACP.product > limit) && (BCP.product > limit);
-                                  if (valid == true)
-                                  { // we exclude go step 1 forward in
-                                    // potential triangle vertices,
-                                    // because the last 1 was invalid
-                                      // std::cout<< "face invalid" << std::endl;
-                                      firstelement++;
-                                      prev1++;
-                                      prev2++;
-                                      prev2 = prev2 == vindices.end() ? vindices.begin()
-                                                                      : prev2;
-                                      prev1 = prev1 == vindices.end() ? vindices.begin()
-                                                                      : prev1;
-                                      firstelement = firstelement == vindices.end()
-                                                         ? vindices.begin()
-                                                         : firstelement;
-                                      break;
-                                  }
-                              }
-                              if (valid == false)
-                              { // in the case of the triangle being valid
-                                  cs.triangles.emplace_back(
-                                      std::array<uint32_t, 3>{
-                                          v0, cs.face[*firstelement], v1});
-                                  firstelement = vindices.erase(firstelement);
-
-                                  switch (switcher)
-                              {
-                              case 1:
-                                  rv1 = {cs.vpc[v0*3+1] - cs.vpc[cs.face[*prev2]*3+1],
-                                         cs.vpc[v0*3+2] -
-                                             cs.vpc[cs.face[*prev2]*3 +2]};
-                                  rv2 = {cs.vpc[v1*3+1] - cs.vpc[cs.face[*prev2]*3+1],
-                                         cs.vpc[v1*3+2] -
-                                             cs.vpc[cs.face[*prev2]*3+2]};
-                                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
-                                  {
-                                      reflex.erase(*prev1);
-                                  }
-                                  break;
-                              case 2:
-                                  rv1 = {cs.vpc[v1*3+1] - cs.vpc[v0*3+2],
-                                         cs.vpc[v1*3+2] - cs.vpc[v0*3+2]};
-                                  rv2 = {cs.vpc[v2*3 +1] - cs.vpc[v0*3+1],
-                                         cs.vpc[v2*3+2] - cs.vpc[v0*3+2]};
-                                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
-                                  {
-                                      reflex.erase(*firstelement);
-
-                                      break;
-                                  }
-                              }
-                              }
-                          }
-                          else
-                          {
-                              valid = false;
-                              for (size_t j = 0; j < reflex.size(); j++)
-                              {
-                                  std::array<float, 2> p = {
-                                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+1],
-                                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+2]}; // the vertex of the polygon
-                                  std::array<float, 2> tp1 = {cs.vpc[v0*3+1], cs.vpc[v0*3+2]};
-                                  std::array<float, 2> tp2 = {cs.vpc[v1*3+1], cs.vpc[v1*3+2]};
-                                  std::array<float, 2> tp3 = {cs.vpc[v2*3+1], cs.vpc[v2*3+2]};
-                                  struct CPpair
-                                  {
-                                      float ad = 0;
-                                      float bc = 0;
-                                      float product = ad - bc;
-                                  } ABP, ACP, BCP;
-                                  ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
-                                  ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
-                                  ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
-                                  ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
-                                  BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
-                                  BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
-                                  ABP.product = ABP.ad - ABP.bc;
-                                  ACP.product = ACP.ad - ACP.bc;
-                                  BCP.product =
-                                      BCP.ad -
-                                      BCP.bc; // we are calculating the normals of the
-                                              // triangle's sides with an another polygon
-                                              // vertex(obv. we are taking each side and
-                                              // the current vertex to it),
-                                  // we are taking the normal relative to a vertex of the
-                                  // potential triangle , and rotate through the triangle
-                                  // in ccw
-                                  valid = (ABP.product > limit) &&
-                                          (ACP.product > limit) && (BCP.product > limit);
-                                  if (valid == true)
-                                  { // we exclude go step 1 forward in
-                                    // potential triangle vertices,
-                                    // because the last 1 was invalid
-                                      // std::cout<< "face invalid" << std::endl;
-                                      firstelement++;
-                                      prev1++;
-                                      prev2++;
-                                      prev2 = prev2 == vindices.end() ? vindices.begin()
-                                                                      : prev2;
-                                      prev1 = prev1 == vindices.end() ? vindices.begin()
-                                                                      : prev1;
-                                      firstelement = firstelement == vindices.end()
-                                                         ? vindices.begin()
-                                                         : firstelement;
-                                      break;
-                                  }
-                              }
-                              if (valid == false)
-                              {
-                                  cs.triangles.emplace_back(
-                                      std::array<uint32_t, 3>{
-                                          v0, cs.face[*firstelement], v1});
-                                  firstelement = vindices.erase(firstelement);
-                                  firstelement++;
-                                  prev1++;
-                                  prev2++;
-                                  prev2 =
-                                      prev2 == vindices.end() ? vindices.begin() : prev2;
-                                  prev1 =
-                                      prev1 == vindices.end() ? vindices.begin() : prev1;
-                                  firstelement = firstelement == vindices.end()
-                                                     ? vindices.begin()
-                                                     : firstelement;
-                              }
-                              continue;
-                          }
-                      }
-                  }
-                }
-                break;
+                reflex.insert(cs.face.size() - j);
+              }
+            }
+            else
+            {
+              vindices.push_back(cs.face.size() - 1 - j);
+              v2 = cs.face[cs.face.size() + 1 - j];
+              v1 = cs.face[cs.face.size() - j];
+              v0 = cs.face[cs.face.size() - 1 - j];
+              rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(cs.face.size() - j);
+              } // until here, the cycle is same as above
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[*(vindices.begin())];
+              rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(0);
+              }
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[*(std::next(vindices.begin(), 1))];
+              rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(cs.face.size() - 1);
+              }
             }
           }
-              
-            case 1: {
-              std::list<uint32_t>::iterator back;
-              if (x > 0) { // we are ordering here based on winding. The normal
-                           // tells us, which way are the vertices ordered
-                for (size_t j {}; j < cs.face.size(); j++) {
-                  if (j < 2) {
-                    vindices.push_back(j);
-                  } else if (j >= 2 && j < cs.face.size() - 1) {
-                    vindices.push_back(j);
-                    v2 = cs.face[j - 2];
-                    v1 = cs.face[j - 1];
-                    v0 = cs.face[j];
-                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
-                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
-                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                      reflex.insert(j - 1);
-                    }
-                  } else {
-                    vindices.push_back(j);
-                    v2 = cs.face[j - 2];
-                    v1 = cs.face[j - 1];
-                    v0 = cs.face[j];
-                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
-                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
-                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                      reflex.insert(j - 1);
-                    } // until here, the cycle is same as above
-                    v2 = v1;
-                    v1 = v0;
-                    v0 = cs.face[0];
-                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
-                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
-                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                      reflex.insert(j);
-                    }
-                    v2 = v1;
-                    v1 = v0;
-                    v0 = cs.face[1];
-                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
-                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
-                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                      reflex.insert(0);
-                    }
-                  }
-                }
-              } else {
-                for (size_t j {}; j < cs.face.size(); j++) {
-                  if (j < 2) {
-                    vindices.push_back(cs.face.size() - 1 - j);
-                  } else if (j >= 2 && j < cs.face.size() - 1) {
-                    vindices.push_back(cs.face.size() - 1 - j);
-                    v2 = cs.face[cs.face.size() + 1 - j];
-                    v1 = cs.face[cs.face.size() - j];
-                    v0 = cs.face[cs.face.size() - 1 - j];
-                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
-                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
-                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                      reflex.insert(cs.face.size() - j);
-                    }
-                  } else {
-                    vindices.push_back(cs.face.size() - 1 - j);
-                    v2 = cs.face[cs.face.size() + 1 - j];
-                    v1 = cs.face[cs.face.size() - j];
-                    v0 = cs.face[cs.face.size() - 1 - j];
-                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
-                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
-                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                      reflex.insert(cs.face.size() - j);
-                    } // until here, the cycle is same as above
-                    v2 = v1;
-                    v1 = v0;
-                    v0 = cs.face[*(vindices.begin())];
-                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
-                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
-                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                      reflex.insert(0);
-                    }
-                    v2 = v1;
-                    v1 = v0;
-                    v0 = cs.face[*(std::next(vindices.begin(), 1))];
-                    rv1 = {cs.vpc[v1*3] - cs.vpc[v2*3], cs.vpc[v1*3+2] - cs.vpc[v2*3+2]};
-                    rv2 = {cs.vpc[v0*3] - cs.vpc[v2*3], cs.vpc[v0*3+2] - cs.vpc[v2*3+2]};
-                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                      reflex.insert(cs.face.size() - 1);
-                    }
-                  }
-                }
-                }
-                
-                std::list<uint32_t>::iterator step = {
-                    std::next(vindices.begin(), 1)};
-                uint32_t reflexelement{0};
-                uint32_t switcher;
-                bool valid;
-                std::list<uint32_t>::iterator firstelement{vindices.begin()};
-                std::list<uint32_t>::iterator nextnext{
-                    std::next(vindices.begin(), 1)};
-                std::list<uint32_t>::iterator prev1{
-                    std::prev(vindices.end(), 1)};
-                std::list<uint32_t>::iterator prev2{
-                    std::prev(vindices.end(), 2)};
-                    reflex.clear();
-                //std::cout << "I made it to while loop in case 1" << std::endl;
-                while (vindices.size() >= 3)
-                {
-                    //std::cout << " entered while loop" << std::endl;
-                    if (reflex.empty() == 1)
-                    {
-                        //std::cout << "reflex is empty" << std::endl;
-                        cs.triangles.emplace_back(
-                            std::array<uint32_t, 3>{
-                                cs.face[*vindices.begin()],
-                                cs.face[*step],
-                                cs.face[*(std::next(step, 1))]});
-                        
-                        /*std::cout << "Triangle: " << cs.fvi[i].ver[*vindices.begin()].v - 1 << " "
-                                  << cs.fvi[i].ver[*step].v - 1 << " "
-                                  << cs.fvi[i].ver[*(std::next(step, 1))].v - 1 << std::endl;*/
-                        step = vindices.erase(step);
+        }
+        {
+          std::list<uint32_t>::iterator step = {
+              std::next(vindices.begin(), 1)};
+          uint32_t reflexelement{0};
+          uint32_t switcher;
+          bool valid;
+          std::list<uint32_t>::iterator firstelement{vindices.begin()};
+          std::list<uint32_t>::iterator nextnext{
+              std::next(vindices.begin(), 1)};
+          std::list<uint32_t>::iterator prev1{std::prev(vindices.end(), 1)};
+          std::list<uint32_t>::iterator prev2{std::prev(vindices.end(), 2)};
+          // std::cout << "I made it to while loop in case 0" << std::endl;
+          reflex.clear();
+          while (vindices.size() >= 3)
+          {
+            if (reflex.empty() == 1)
+            { // O(n) check for reflex vertices, if there are none, then we can be sure that all the triangles are valid,
+              // and we can just triangulate the rest of the polygon without checks=> improvement compared to the last version,
+              cs.triangles.emplace_back(std::array<uint32_t, 3>{
+                  cs.face[*vindices.begin()],
+                  cs.face[*step],
+                  cs.face[*(std::next(step, 1))]});
+              uint64_t edge = MakeEdge(cs.face[*vindices.begin()], cs.face[*step]);
+              edgeIndexSet.insert(edge);
+              edge = MakeEdge(cs.face[*vindices.begin()], cs.face[*(std::next(step, 1))]);
+              edgeIndexSet.insert(edge);
+              edge = MakeEdge(cs.face[*step], cs.face[*(std::next(step, 1))]);
+              edgeIndexSet.insert(edge);
 
-                        // std::cout<< "face valid" << std::endl;
-                        // std::cout k++;<< "I have removed: " << v1+1 <<
-                        // std::endl; std::cout << "Triangle
-                        // "<<cs.triangles[cs.triangles.size()-1][0] << " " <<
-                        // cs.triangles[cs.triangles.size()-1][1] << " "<<
-                        // cs.triangles[cs.triangles.size()-1][2]<< std::endl;
-                    }
-                    else
-                    {
-                        //std::cout << "else" << std::endl;
-                        if (reflex.find(*firstelement) != reflex.end())
-                        {
-                            firstelement++;
-                            nextnext++;
-                            prev1++;
-                            prev2++;
-                            nextnext = nextnext == vindices.end() ? vindices.begin()
-                                                                  : nextnext;
-                            prev2 =
-                                prev2 == vindices.end() ? vindices.begin() : prev2;
-                            prev1 =
-                                prev1 == vindices.end() ? vindices.begin() : prev1;
-                            firstelement = firstelement == vindices.end()
-                                               ? vindices.begin()
-                                               : firstelement;
-                        } else {
-                        v0 = cs.face[*prev1];
-                        reflexelement = reflex.find(*prev1) == reflex.end()
-                                            ? 0
-                                            : (1 && (switcher = 1));
-                        v1 = cs.face[*nextnext];
-                        reflexelement = reflex.find(*nextnext) == reflex.end()
-                                            ? (reflexelement && (switcher = 1))
-                                        : reflexelement == 0
-                                            ? (reflexelement && (switcher = 2))
-                                            : reflexelement += 1;
-                        v2 = cs.face[std::next(nextnext) == vindices.end()
-                                          ? *vindices.begin()
-                                          : *nextnext];
+              step = vindices.erase(step);
 
-                        if (reflexelement == reflex.size()) {
-                          cs.triangles.emplace_back(
-                              std::array<uint32_t, 3>{
-                                  v0, cs.face[*firstelement], v1});
-                          firstelement = vindices.erase(firstelement);
-                          /*std::cout << "reflex.size() is reflexelement" << std::endl;
-                          std::cout << "Triangle: " << v0 << " "
-                                << cs.fvi[i].ver[*firstelement].v - 1 << " "
-                                << v1 << std::endl;*/
-                          nextnext++;
-                          switch (switcher) {
-                          case 1:
-                            rv1 = {cs.vpc[v0*3] -
-                                       cs.vpc[cs.face[*prev2]*3],
-                                   cs.vpc[v0*3+2] -
-                                       cs.vpc[cs.face[*prev2]*3+2]};
-                            rv2 = {cs.vpc[v1*3] -
-                                       cs.vpc[cs.face[*prev2]*3],
-                                   cs.vpc[v1*3+2] -
-                                       cs.vpc[cs.face[*prev2]*3+2]};
-                            if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
-                              reflex.erase(*prev1);
-                            }
-                            break;
-                          case 2:
-                            rv1 = {cs.vpc[v1*3] - cs.vpc[v0*3],
-                                   cs.vpc[v1*3+2] - cs.vpc[v0*3+2]};
-                            rv2 = {cs.vpc[v2*3] - cs.vpc[v0*3],
-                                   cs.vpc[v2*3+2] - cs.vpc[v0*3+2]};
-                            if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
-                              reflex.erase(*firstelement);
-
-                              break;
-                            }
-                          }
-                        } else if (reflexelement > 0) {
-                          //std::cout << "reflex.size() is > reflexelement" << std::endl;
-                          valid = false;
-                          for (size_t j = 0; j < reflex.size(); j++) {
-                            std::array<float, 2> p = {
-                                cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3],
-                                cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+2]}; // the vertex of the polygon
-                            std::array<float, 2> tp1 = {cs.vpc[v0*3], cs.vpc[v0*3+2]};
-                            std::array<float, 2> tp2 = {cs.vpc[v1*3], cs.vpc[v1*3+2]};
-                            std::array<float, 2> tp3 = {cs.vpc[v2*3], cs.vpc[v2*3+2]};
-                            struct CPpair {
-                              float ad = 0;
-                              float bc = 0;
-                              float product = ad - bc;
-                            } ABP, ACP, BCP;
-                            ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
-                            ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
-                            ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
-                            ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
-                            BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
-                            BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
-                            ABP.product = ABP.ad - ABP.bc;
-                            ACP.product = ACP.ad - ACP.bc;
-                            BCP.product =
-                                BCP.ad -
-                                BCP.bc; // we are calculating the normals of the
-                                        // triangle's sides with an another
-                                        // polygon vertex(obv. we are taking
-                                        // each side and the current vertex to
-                                        // it),
-                            // we are taking the normal relative to a vertex of
-                            // the potential triangle , and rotate through the
-                            // triangle in ccw
-                            valid = (ABP.product > limit) &&
-                                    (ACP.product > limit) &&
-                                    (BCP.product > limit);
-                            if (valid ==
-                                true) { // we exclude go step 1 forward in
-                                        // potential triangle vertices, because
-                                        // the last 1 was invalid
-                              // std::cout<< "face invalid" << std::endl;
-                              firstelement++;
-                              prev1++;
-                              prev2++;
-                              prev2 = prev2 == vindices.end() ? vindices.begin()
-                                                              : prev2;
-                              prev1 = prev1 == vindices.end() ? vindices.begin()
-                                                              : prev1;
-                              firstelement = firstelement == vindices.end()
-                                                 ? vindices.begin()
-                                                 : firstelement;
-                              break;
-                            }
-                          }
-                          if (valid == false) {
-                            cs.triangles.emplace_back(
-                                std::array<uint32_t, 3>{
-                                    v0, cs.face[*firstelement],
-                                    v1});
-                            firstelement = vindices.erase(firstelement);
-                            
-                            /*std::cout << "Triangle: " << v0 << " "
-                                << cs.fvi[i].ver[*firstelement].v - 1 << " "
-                                << v1 << std::endl;*/
-                            switch (switcher) {
-                            case 1:
-                              rv1 = {cs.vpc[v0*3] -
-                                        cs.vpc[cs.face[*prev2]*3],
-                                    cs.vpc[v0*3+2] -
-                                        cs.vpc[cs.face[*prev2]*3+2]};
-                              rv2 = {cs.vpc[v1*3] -
-                                        cs.vpc[cs.face[*prev2]*3],
-                                    cs.vpc[v1*3+2] -
-                                        cs.vpc[cs.face[*prev2]*3+2]};
-                              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
-                                reflex.erase(*prev1);
-                              }
-                              break;
-                            case 2:
-                              rv1 = {cs.vpc[v1*3] - cs.vpc[v0*3],
-                                    cs.vpc[v1*3+2] - cs.vpc[v0*3+2]};
-                              rv2 = {cs.vpc[v2*3] - cs.vpc[v0*3],
-                                    cs.vpc[v2*3+2] - cs.vpc[v0*3+2]};
-                              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
-                                reflex.erase(*firstelement);
-
-                                break;
-                              }
-                            }
-                          }
-                        } else {
-                          valid = false;
-                          //std::cout << "reflexelement is 0" << std::endl;
-                          for (size_t j = 0; j < reflex.size(); j++) {
-                            std::array<float, 2> p = {
-                                cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3],
-                                cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+2]}; // the vertex of the polygon
-                            std::array<float, 2> tp1 = {cs.vpc[v0*3], cs.vpc[v0*3+2]};
-                            std::array<float, 2> tp2 = {cs.vpc[v1*3], cs.vpc[v1*3+2]};
-                            std::array<float, 2> tp3 = {cs.vpc[v2*3], cs.vpc[v2*3+2]};
-                            struct CPpair {
-                              float ad = 0;
-                              float bc = 0;
-                              float product = ad - bc;
-                            } ABP, ACP, BCP;
-                            ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
-                            ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
-                            ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
-                            ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
-                            BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
-                            BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
-                            ABP.product = ABP.ad - ABP.bc;
-                            ACP.product = ACP.ad - ACP.bc;
-                            BCP.product =
-                                BCP.ad -
-                                BCP.bc; // we are calculating the normals of the
-                                        // triangle's sides with an another
-                                        // polygon vertex(obv. we are taking
-                                        // each side and the current vertex to
-                                        // it),
-                            // we are taking the normal relative to a vertex of
-                            // the potential triangle , and rotate through the
-                            // triangle in ccw
-                            valid = (ABP.product > limit) &&
-                                    (ACP.product > limit) &&
-                                    (BCP.product > limit);
-                            if (valid ==
-                                true) { // we exclude go step 1 forward in
-                                        // potential triangle vertices, because
-                                        // the last 1 was invalid
-                              // std::cout<< "face invalid" << std::endl;
-                              firstelement++;
-                              prev1++;
-                              prev2++;
-                              prev2 = prev2 == vindices.end() ? vindices.begin()
-                                                              : prev2;
-                              prev1 = prev1 == vindices.end() ? vindices.begin()
-                                                              : prev1;
-                              firstelement = firstelement == vindices.end()
-                                                 ? vindices.begin()
-                                                 : firstelement;
-                              break;
-                            }
-                          }
-                          if (valid == false) {
-                            cs.triangles.emplace_back(
-                                std::array<uint32_t, 3>{
-                                    v0, cs.face[*firstelement],
-                                    v1});
-                                    //std::cout << "Triangle: " << v0 << " "<< cs.fvi[i].ver[*firstelement].v - 1 << " "<< v1 << std::endl;
-                            firstelement = vindices.erase(firstelement);
-                            firstelement++;
-                            prev1++;
-                            prev2++;
-                            prev2 = prev2 == vindices.end() ? vindices.begin()
-                                                            : prev2;
-                            prev1 = prev1 == vindices.end() ? vindices.begin()
-                                                            : prev1;
-                            firstelement = firstelement == vindices.end()
-                                               ? vindices.begin()
-                                               : firstelement;
-                          }
-                          continue;
-                        }
-                      }
-                    }
-                  }
-                
-            break;
+              // std::cout<< "face valid" << std::endl;
+              // std::cout k++;<< "I have removed: " << v1+1 << std::endl;
+              // std::cout << "Triangle
+              // "<<cs.triangles[cs.triangles.size()-1][0] << " " <<
+              // cs.triangles[cs.triangles.size()-1][1] << " "<<
+              // cs.triangles[cs.triangles.size()-1][2]<< std::endl;
             }
-          case 2: {
-            std::list<uint32_t>::iterator back;
-            if (x > 0) { // we are ordering here based on winding. The normal
-                         // tells us, which way are the vertices ordered
-              for (size_t j = 0; j < cs.face.size(); j++) {
-                if (j < 2) {
-                  vindices.push_back(j);
-                } else if (j >= 2 && j < cs.face.size() - 1) {
-                  vindices.push_back(j);
-                  v2 = cs.face[j - 2];
-                  v1 = cs.face[j - 1];
-                  v0 = cs.face[j];
-                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                    reflex.insert(j - 1);
-                  }
-                } else {
-                  vindices.push_back(j);
-                  v2 = cs.face[j - 2];
-                  v1 = cs.face[j - 1];
-                  v0 = cs.face[j];
-                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                    reflex.insert(j - 1);
-                  } // until here, the cycle is same as above
-                  v2 = v1;
-                  v1 = v0;
-                  v0 = cs.face[0];
-                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                    reflex.insert(j);
-                  }
-                  v2 = v1;
-                  v1 = v0;
-                  v0 = cs.face[1];
-                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                    reflex.insert(0);
-                  }
-                }
+            else
+            {
+              if (reflex.find(*firstelement) != reflex.end())
+              { // we can't cast a triangle with a reflex vertex
+                firstelement++;
+                nextnext++;
+                prev1++;
+                prev2++;
+                nextnext = nextnext == vindices.end() ? vindices.begin()
+                                                      : nextnext;
+                prev2 = prev2 == vindices.end() ? vindices.begin() : prev2;
+                prev1 = prev1 == vindices.end() ? vindices.begin() : prev1;
+                firstelement = firstelement == vindices.end()
+                                   ? vindices.begin()
+                                   : firstelement;
               }
-            } else {
-              for (int j = 0; j < cs.face.size(); j++) {
-                if (j < 2) {
-                  vindices.push_back(cs.face.size() - 1 - j);
-                } else if (j >= 2 && j < cs.face.size() - 1) {
-                  vindices.push_back(cs.face.size() - 1 - j);
-                  v2 = cs.face[cs.face.size() + 1 - j];
-                  v1 = cs.face[cs.face.size() - j];
-                  v0 = cs.face[cs.face.size() - 1 - j];
-                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                    reflex.insert(cs.face.size() - j);
-                  }
-                } else {
-                  vindices.push_back(cs.face.size() - 1 - j);
-                  v2 = cs.face[cs.face.size() + 1 - j];
-                  v1 = cs.face[cs.face.size() - j];
-                  v0 = cs.face[cs.face.size() - 1 - j];
-                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                    reflex.insert(cs.face.size() - j);
-                  } // until here, the cycle is same as above
-                  v2 = v1;
-                  v1 = v0;
-                  v0 = cs.face[*(vindices.begin())];
-                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                    reflex.insert(0);
-                  }
-                  v2 = v1;
-                  v1 = v0;
-                  v0 = cs.face[*(std::next(vindices.begin(), 1))];
-                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
-                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0) {
-                    reflex.insert(cs.face.size() - 1);
+              else
+              {
+                v0 = cs.face[*prev1];                               // first vertex of the triangle
+                reflexelement = reflex.find(*prev1) == reflex.end() // calculate reflex vertices in the triangle
+                                    ? 0
+                                    : (1 && (switcher = 1));
+                v1 = cs.face[*nextnext]; // the last vertex of the triangle
+                reflexelement = reflex.find(*nextnext) == reflex.end()
+                                    ? (reflexelement && (switcher = 1))
+                                : reflexelement == 0
+                                    ? (reflexelement && (switcher = 2))
+                                    : reflexelement += 1;
+                v2 = cs.face[std::next(nextnext) == vindices.end() // getting the next vertex after the triangles 3 vertices for future normal calculations
+                                 ? *vindices.begin()
+                                 : *nextnext];
+
+                // I've  broken down the triangle cast into 3 parts:
+                // 1.) there are as much reflex vertices as there are relfex vertices in the potential triangle
+                //=> we justhave to reevaluate the reflex vertices in the triangle
+                // 2.) there are more reflex vertices than there are reflex vertices in the potential triangle
+                //=> we have to both reeavaluate the reflex vertices in the triangle, and check the rest of the reflex vertices, whether they are in the triangle or not
+                // 3.) there are 0 relfex vertices in the potential triangle
+                //=> we just have to check for reflex vertices in the triangle
+                if (reflexelement == reflex.size())
+                {
+                  cs.triangles.emplace_back(
+                      std::array<uint32_t, 3>{
+                          v0, cs.face[*firstelement], v1});
+                  uint64_t edge = MakeEdge(v0, cs.face[*firstelement]);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(v0, v1);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(cs.face[*firstelement], v1);
+                  edgeIndexSet.insert(edge);
+
+                  firstelement = vindices.erase(firstelement);
+                  nextnext++;
+                  switch (switcher)
+                  {
+                  case 1:
+                    rv1 = {cs.vpc[v0 * 3 + 1] - cs.vpc[cs.face[*prev2] * 3 + 1],
+                           cs.vpc[v0 * 3 + 2] -
+                               cs.vpc[cs.face[*prev2] * 3 + 2]};
+                    rv2 = {cs.vpc[v1 * 3 + 1] - cs.vpc[cs.face[*prev2] * 3 + 1],
+                           cs.vpc[v1 * 3 + 2] -
+                               cs.vpc[cs.face[*prev2] * 3 + 2]};
+                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                    {
+                      reflex.erase(*prev1);
+                    }
+                    break;
+                  case 2:
+                    rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v0 * 3 + 2],
+                           cs.vpc[v1 * 3 + 2] - cs.vpc[v0 * 3 + 2]};
+                    rv2 = {cs.vpc[v2 * 3 + 1] - cs.vpc[v0 * 3 + 1],
+                           cs.vpc[v2 * 3 + 2] - cs.vpc[v0 * 3 + 2]};
+                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                    {
+                      reflex.erase(*firstelement);
+
+                      break;
+                    }
                   }
                 }
-                }
-                }
-                std::list<uint32_t>::iterator step = {
-                    std::next(vindices.begin(), 1)};
-                uint32_t reflexelement{0};
-                uint32_t switcher;
-                bool valid;
-                std::list<uint32_t>::iterator firstelement{vindices.begin()};
-                std::list<uint32_t>::iterator nextnext{
-                    std::next(vindices.begin(), 1)};
-                std::list<uint32_t>::iterator prev1{
-                    std::prev(vindices.end(), 1)};
-                std::list<uint32_t>::iterator prev2{
-                    std::prev(vindices.end(), 2)};
-                    reflex.clear();
-                //std::cout << "I made it to while loop in case 2" << std::endl;
-                while (vindices.size() >= 3) {
-                  if (reflex.empty() == 1) {
-                    cs.triangles.emplace_back(std::array<uint32_t, 3>{
-                        cs.face[*vindices.begin()],
-                        cs.face[*step],
-                        cs.face[*(std::next(step, 1))]});
-                    step = vindices.erase(step);
-                    // std::cout<< "face valid" << std::endl;
-                    // std::cout k++;<< "I have removed: " << v1+1 << std::endl;
-                    // std::cout << "Triangle
-                    // "<<cs.triangles[cs.triangles.size()-1][0] << " " <<
-                    // cs.triangles[cs.triangles.size()-1][1] << " "<<
-                    // cs.triangles[cs.triangles.size()-1][2]<< std::endl;
-                  } else {
-                    if (reflex.find(*firstelement) != reflex.end()) {
+                else if (reflexelement > 0)
+                {
+                  valid = false;
+                  for (size_t j = 0; j < reflex.size(); j++)
+                  {
+                    std::array<float, 2> p = {
+                        cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3 + 1],
+                        cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3 + 2]}; // the vertex of the polygon
+                    std::array<float, 2> tp1 = {cs.vpc[v0 * 3 + 1], cs.vpc[v0 * 3 + 2]};
+                    std::array<float, 2> tp2 = {cs.vpc[v1 * 3 + 1], cs.vpc[v1 * 3 + 2]};
+                    std::array<float, 2> tp3 = {cs.vpc[v2 * 3 + 1], cs.vpc[v2 * 3 + 2]};
+                    struct CPpair
+                    {
+                      float ad = 0;
+                      float bc = 0;
+                      float product = ad - bc;
+                    } ABP, ACP, BCP;
+                    ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
+                    ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
+                    ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
+                    ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
+                    BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
+                    BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
+                    ABP.product = ABP.ad - ABP.bc;
+                    ACP.product = ACP.ad - ACP.bc;
+                    BCP.product =
+                        BCP.ad -
+                        BCP.bc; // we are calculating the normals of the
+                                // triangle's sides with an another polygon
+                                // vertex//(obv. we are taking each side and
+                                // the current vertex to it),
+                    // we are taking the normal relative to a vertex of the
+                    // potential triangle , and rotate through the triangle
+                    // in ccw
+                    valid = (ABP.product > limit) &&
+                            (ACP.product > limit) && (BCP.product > limit);
+                    if (valid == true)
+                    { // we exclude go step 1 forward in
+                      // potential triangle vertices,
+                      // because the last 1 was invalid
+                      // std::cout<< "face invalid" << std::endl;
                       firstelement++;
-                      nextnext++;
                       prev1++;
                       prev2++;
-                      nextnext = nextnext == vindices.end() ? vindices.begin()
-                                                            : nextnext;
-                      prev2 =
-                          prev2 == vindices.end() ? vindices.begin() : prev2;
-                      prev1 =
-                          prev1 == vindices.end() ? vindices.begin() : prev1;
+                      prev2 = prev2 == vindices.end() ? vindices.begin()
+                                                      : prev2;
+                      prev1 = prev1 == vindices.end() ? vindices.begin()
+                                                      : prev1;
                       firstelement = firstelement == vindices.end()
                                          ? vindices.begin()
                                          : firstelement;
-                    } else {
-                      v0 = cs.face[*prev1];
-                      reflexelement = reflex.find(*prev1) == reflex.end()
-                                          ? 0
-                                          : (1 && (switcher = 1));
-                      v1 = cs.face[*nextnext];
-                      reflexelement = reflex.find(*nextnext) == reflex.end()
-                                          ? (reflexelement && (switcher = 1))
-                                      : reflexelement == 0
-                                          ? (reflexelement && (switcher = 2))
-                                          : reflexelement += 1;
-                      v2 = cs.face[std::next(nextnext) == vindices.end()
-                                        ? *vindices.begin()
-                                        : *nextnext];
+                      break;
+                    }
+                  }
+                  if (valid == false)
+                  { // in the case of the triangle being valid
+                    cs.triangles.emplace_back(
+                        std::array<uint32_t, 3>{
+                            v0, cs.face[*firstelement], v1});
+                    uint64_t edge = MakeEdge(v0, cs.face[*firstelement]);
+                    edgeIndexSet.insert(edge);
+                    edge = MakeEdge(v0, v1);
+                    edgeIndexSet.insert(edge);
+                    edge = MakeEdge(cs.face[*firstelement], v1);
+                    edgeIndexSet.insert(edge);
+                    firstelement = vindices.erase(firstelement);
 
-                      if (reflexelement == reflex.size()) {
-                        cs.triangles.emplace_back(
-                            std::array<uint32_t, 3>{
-                                v0, cs.face[*firstelement], v1});
-                        firstelement = vindices.erase(firstelement);
-                        nextnext++;
-                        switch (switcher) {
-                        case 1:
-                          rv1 = {
-                              cs.vpc[v0*3] - cs.vpc[cs.face[*prev2]*3],
-                              cs.vpc[v0*3+1] - cs.vpc[cs.face[*prev2]*3+1]};
-                          rv2 = {
-                              cs.vpc[v1*3] - cs.vpc[cs.face[*prev2]*3],
-                              cs.vpc[v1*3+1] - cs.vpc[cs.face[*prev2]*3+1]};
-                          if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
-                            reflex.erase(*prev1);
-                          }
-                          break;
-                        case 2:
-                          rv1 = {cs.vpc[v1*3] - cs.vpc[v0*3],
-                                 cs.vpc[v1*3+1] - cs.vpc[v0*3+1]};
-                          rv2 = {cs.vpc[v2*3] - cs.vpc[v0*3],
-                                 cs.vpc[v2*3+1] - cs.vpc[v0*3+1]};
-                          if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
-                            reflex.erase(*firstelement);
+                    switch (switcher)
+                    {
+                    case 1:
+                      rv1 = {cs.vpc[v0 * 3 + 1] - cs.vpc[cs.face[*prev2] * 3 + 1],
+                             cs.vpc[v0 * 3 + 2] -
+                                 cs.vpc[cs.face[*prev2] * 3 + 2]};
+                      rv2 = {cs.vpc[v1 * 3 + 1] - cs.vpc[cs.face[*prev2] * 3 + 1],
+                             cs.vpc[v1 * 3 + 2] -
+                                 cs.vpc[cs.face[*prev2] * 3 + 2]};
+                      if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                      {
+                        reflex.erase(*prev1);
+                      }
+                      break;
+                    case 2:
+                      rv1 = {cs.vpc[v1 * 3 + 1] - cs.vpc[v0 * 3 + 2],
+                             cs.vpc[v1 * 3 + 2] - cs.vpc[v0 * 3 + 2]};
+                      rv2 = {cs.vpc[v2 * 3 + 1] - cs.vpc[v0 * 3 + 1],
+                             cs.vpc[v2 * 3 + 2] - cs.vpc[v0 * 3 + 2]};
+                      if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                      {
+                        reflex.erase(*firstelement);
 
-                            break;
-                          }
-                        }
-                      } else if (reflexelement > 0) {
-                        valid = false;
-                        for (size_t j = 0; j < reflex.size(); j++) {
-                          std::array<float, 2> p = {
-                              cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3],
-                              cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+1]}; // the vertex of the polygon
-                          std::array<float, 2> tp1 = {cs.vpc[v0*3], cs.vpc[v0*3+1]};
-                          std::array<float, 2> tp2 = {cs.vpc[v1*3], cs.vpc[v1*3+1]};
-                          std::array<float, 2> tp3 = {cs.vpc[v2*3], cs.vpc[v2*3+1]};
-                          struct CPpair {
-                            float ad = 0;
-                            float bc = 0;
-                            float product = ad - bc;
-                          } ABP, ACP, BCP;
-                          ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
-                          ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
-                          ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
-                          ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
-                          BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
-                          BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
-                          ABP.product = ABP.ad - ABP.bc;
-                          ACP.product = ACP.ad - ACP.bc;
-                          BCP.product =
-                              BCP.ad -
-                              BCP.bc; // we are calculating the normals of the
-                                      // triangle's sides with an another
-                                      // polygon vertex(obv. we are taking each
-                                      // side and the current vertex to it),
-                          // we are taking the normal relative to a vertex of
-                          // the potential triangle , and rotate through the
-                          // triangle in ccw
-                          valid = (ABP.product > limit) &&
-                                  (ACP.product > limit) &&
-                                  (BCP.product > limit);
-                          if (valid ==
-                              true) { // we exclude go step 1 forward in
-                                      // potential triangle vertices, because
-                                      // the last 1 was invalid
-                            // std::cout<< "face invalid" << std::endl;
-                            firstelement++;
-                            prev1++;
-                            prev2++;
-                            prev2 = prev2 == vindices.end() ? vindices.begin()
-                                                            : prev2;
-                            prev1 = prev1 == vindices.end() ? vindices.begin()
-                                                            : prev1;
-                            firstelement = firstelement == vindices.end()
-                                               ? vindices.begin()
-                                               : firstelement;
-                            break;
-                          }
-                        }
-                        if (valid == false) {
-                          cs.triangles.emplace_back(
-                              std::array<uint32_t, 3>{
-                                  v0, cs.face[*firstelement], v1});
-                          firstelement = vindices.erase(firstelement);
-
-                          switch (switcher) {
-                          case 1:
-                            rv1 = {
-                                cs.vpc[v0*3] - cs.vpc[cs.face[*prev2]*3],
-                                cs.vpc[v0*3+1] - cs.vpc[cs.face[*prev2]*3+1]};
-                            rv2 = {
-                                cs.vpc[v1*3] - cs.vpc[cs.face[*prev2]*3],
-                                cs.vpc[v1*3+1] - cs.vpc[cs.face[*prev2]*3+1]};
-                            if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
-                              reflex.erase(*prev1);
-                            }
-                            break;
-                          case 2:
-                            rv1 = {cs.vpc[v1*3] - cs.vpc[v0*3],
-                                  cs.vpc[v1*3+1] - cs.vpc[v0*3+1]};
-                            rv2 = {cs.vpc[v2*3] - cs.vpc[v0*3],
-                                  cs.vpc[v2*3+1] - cs.vpc[v0*3+1]};
-                            if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0) {
-                              reflex.erase(*firstelement);
-
-                              break;
-                            }
-                          }
-                        }
-                      } else {
-                        valid = false;
-                        for (size_t j = 0; j < reflex.size(); j++) {
-                          std::array<float, 2> p = {
-                              cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3],
-                              cs.vpc[cs.face[*(std::next(reflex.begin(), j))]*3+1]}; // the vertex of the polygon
-                          std::array<float, 2> tp1 = {cs.vpc[v0*3], cs.vpc[v0*3+1]};
-                          std::array<float, 2> tp2 = {cs.vpc[v1*3], cs.vpc[v1*3+1]};
-                          std::array<float, 2> tp3 = {cs.vpc[v2*3], cs.vpc[v2*3+1]};
-                          struct CPpair {
-                            float ad = 0;
-                            float bc = 0;
-                            float product = ad - bc;
-                          } ABP, ACP, BCP;
-                          ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
-                          ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
-                          ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
-                          ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
-                          BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
-                          BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
-                          ABP.product = ABP.ad - ABP.bc;
-                          ACP.product = ACP.ad - ACP.bc;
-                          BCP.product =
-                              BCP.ad -
-                              BCP.bc; // we are calculating the normals of the
-                                      // triangle's sides with an another
-                                      // polygon vertex(obv. we are taking each
-                                      // side and the current vertex to it),
-                          // we are taking the normal relative to a vertex of
-                          // the potential triangle , and rotate through the
-                          // triangle in ccw
-                          valid = (ABP.product > limit) &&
-                                  (ACP.product > limit) &&
-                                  (BCP.product > limit);
-                          if (valid ==
-                              true) { // we exclude go step 1 forward in
-                                      // potential triangle vertices, because
-                                      // the last 1 was invalid
-                            // std::cout<< "face invalid" << std::endl;
-                            firstelement++;
-                            prev1++;
-                            prev2++;
-                            prev2 = prev2 == vindices.end() ? vindices.begin()
-                                                            : prev2;
-                            prev1 = prev1 == vindices.end() ? vindices.begin()
-                                                            : prev1;
-                            firstelement = firstelement == vindices.end()
-                                               ? vindices.begin()
-                                               : firstelement;
-                            break;
-                          }
-                        }
-                        if (valid == false) {
-                          cs.triangles.emplace_back(
-                              std::array<uint32_t, 3>{
-                                  v0, cs.face[*firstelement], v1});
-                          firstelement = vindices.erase(firstelement);
-                          firstelement++;
-                          prev1++;
-                          prev2++;
-                          prev2 = prev2 == vindices.end() ? vindices.begin()
-                                                          : prev2;
-                          prev1 = prev1 == vindices.end() ? vindices.begin()
-                                                          : prev1;
-                          firstelement = firstelement == vindices.end()
-                                             ? vindices.begin()
-                                             : firstelement;
-                        }
-                        continue;
+                        break;
                       }
                     }
                   }
+                }
+                else
+                {
+                  valid = false;
+                  for (size_t j = 0; j < reflex.size(); j++)
+                  {
+                    std::array<float, 2> p = {
+                        cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3 + 1],
+                        cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3 + 2]}; // the vertex of the polygon
+                    std::array<float, 2> tp1 = {cs.vpc[v0 * 3 + 1], cs.vpc[v0 * 3 + 2]};
+                    std::array<float, 2> tp2 = {cs.vpc[v1 * 3 + 1], cs.vpc[v1 * 3 + 2]};
+                    std::array<float, 2> tp3 = {cs.vpc[v2 * 3 + 1], cs.vpc[v2 * 3 + 2]};
+                    struct CPpair
+                    {
+                      float ad = 0;
+                      float bc = 0;
+                      float product = ad - bc;
+                    } ABP, ACP, BCP;
+                    ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
+                    ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
+                    ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
+                    ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
+                    BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
+                    BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
+                    ABP.product = ABP.ad - ABP.bc;
+                    ACP.product = ACP.ad - ACP.bc;
+                    BCP.product =
+                        BCP.ad -
+                        BCP.bc; // we are calculating the normals of the
+                                // triangle's sides with an another polygon
+                                // vertex(obv. we are taking each side and
+                                // the current vertex to it),
+                    // we are taking the normal relative to a vertex of the
+                    // potential triangle , and rotate through the triangle
+                    // in ccw
+                    valid = (ABP.product > limit) &&
+                            (ACP.product > limit) && (BCP.product > limit);
+                    if (valid == true)
+                    { // we exclude go step 1 forward in
+                      // potential triangle vertices,
+                      // because the last 1 was invalid
+                      // std::cout<< "face invalid" << std::endl;
+                      firstelement++;
+                      prev1++;
+                      prev2++;
+                      prev2 = prev2 == vindices.end() ? vindices.begin()
+                                                      : prev2;
+                      prev1 = prev1 == vindices.end() ? vindices.begin()
+                                                      : prev1;
+                      firstelement = firstelement == vindices.end()
+                                         ? vindices.begin()
+                                         : firstelement;
+                      break;
+                    }
+                  }
+                  if (valid == false)
+                  {
+                    cs.triangles.emplace_back(
+                        std::array<uint32_t, 3>{
+                            v0, cs.face[*firstelement], v1});
+                    uint64_t edge = MakeEdge(v0, cs.face[*firstelement]);
+                    edgeIndexSet.insert(edge);
+                    edge = MakeEdge(v0, v1);
+                    edgeIndexSet.insert(edge);
+                    edge = MakeEdge(cs.face[*firstelement], v1);
+                    edgeIndexSet.insert(edge);
+                    firstelement = vindices.erase(firstelement);
+                    firstelement++;
+                    prev1++;
+                    prev2++;
+                    prev2 =
+                        prev2 == vindices.end() ? vindices.begin() : prev2;
+                    prev1 =
+                        prev1 == vindices.end() ? vindices.begin() : prev1;
+                    firstelement = firstelement == vindices.end()
+                                       ? vindices.begin()
+                                       : firstelement;
+                  }
+                  continue;
+                }
+              }
             }
-            break;
           }
-          }
-          cs.triangles.shrink_to_fit();
+          break;
+        }
       }
+
+      case 1:
+      {
+        std::list<uint32_t>::iterator back;
+        if (x > 0)
+        { // we are ordering here based on winding. The normal
+          // tells us, which way are the vertices ordered
+          for (size_t j{}; j < cs.face.size(); j++)
+          {
+            if (j < 2)
+            {
+              vindices.push_back(j);
+            }
+            else if (j >= 2 && j < cs.face.size() - 1)
+            {
+              vindices.push_back(j);
+              v2 = cs.face[j - 2];
+              v1 = cs.face[j - 1];
+              v0 = cs.face[j];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(j - 1);
+              }
+            }
+            else
+            {
+              vindices.push_back(j);
+              v2 = cs.face[j - 2];
+              v1 = cs.face[j - 1];
+              v0 = cs.face[j];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(j - 1);
+              } // until here, the cycle is same as above
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[0];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(j);
+              }
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[1];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(0);
+              }
+            }
+          }
+        }
+        else
+        {
+          for (size_t j{}; j < cs.face.size(); j++)
+          {
+            if (j < 2)
+            {
+              vindices.push_back(cs.face.size() - 1 - j);
+            }
+            else if (j >= 2 && j < cs.face.size() - 1)
+            {
+              vindices.push_back(cs.face.size() - 1 - j);
+              v2 = cs.face[cs.face.size() + 1 - j];
+              v1 = cs.face[cs.face.size() - j];
+              v0 = cs.face[cs.face.size() - 1 - j];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(cs.face.size() - j);
+              }
+            }
+            else
+            {
+              vindices.push_back(cs.face.size() - 1 - j);
+              v2 = cs.face[cs.face.size() + 1 - j];
+              v1 = cs.face[cs.face.size() - j];
+              v0 = cs.face[cs.face.size() - 1 - j];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(cs.face.size() - j);
+              } // until here, the cycle is same as above
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[*(vindices.begin())];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(0);
+              }
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[*(std::next(vindices.begin(), 1))];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 2] - cs.vpc[v2 * 3 + 2]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(cs.face.size() - 1);
+              }
+            }
+          }
+        }
+
+        std::list<uint32_t>::iterator step = {
+            std::next(vindices.begin(), 1)};
+        uint32_t reflexelement{0};
+        uint32_t switcher;
+        bool valid;
+        std::list<uint32_t>::iterator firstelement{vindices.begin()};
+        std::list<uint32_t>::iterator nextnext{
+            std::next(vindices.begin(), 1)};
+        std::list<uint32_t>::iterator prev1{
+            std::prev(vindices.end(), 1)};
+        std::list<uint32_t>::iterator prev2{
+            std::prev(vindices.end(), 2)};
+        reflex.clear();
+        // std::cout << "I made it to while loop in case 1" << std::endl;
+        while (vindices.size() >= 3)
+        {
+          // std::cout << " entered while loop" << std::endl;
+          if (reflex.empty() == 1)
+          {
+            // std::cout << "reflex is empty" << std::endl;
+            cs.triangles.emplace_back(
+                std::array<uint32_t, 3>{
+                    cs.face[*vindices.begin()],
+                    cs.face[*step],
+                    cs.face[*(std::next(step, 1))]});
+            uint64_t edge = MakeEdge(cs.face[*vindices.begin()], cs.face[*step]);
+            edgeIndexSet.insert(edge);
+            edge = MakeEdge(cs.face[*vindices.begin()], cs.face[*(std::next(step, 1))]);
+            edgeIndexSet.insert(edge);
+            edge = MakeEdge(cs.face[*step], cs.face[*(std::next(step, 1))]);
+            edgeIndexSet.insert(edge);
+            /*std::cout << "Triangle: " << cs.fvi[i].ver[*vindices.begin()].v - 1 << " "
+                      << cs.fvi[i].ver[*step].v - 1 << " "
+                      << cs.fvi[i].ver[*(std::next(step, 1))].v - 1 << std::endl;*/
+            step = vindices.erase(step);
+
+            // std::cout<< "face valid" << std::endl;
+            // std::cout k++;<< "I have removed: " << v1+1 <<
+            // std::endl; std::cout << "Triangle
+            // "<<cs.triangles[cs.triangles.size()-1][0] << " " <<
+            // cs.triangles[cs.triangles.size()-1][1] << " "<<
+            // cs.triangles[cs.triangles.size()-1][2]<< std::endl;
+          }
+          else
+          {
+            // std::cout << "else" << std::endl;
+            if (reflex.find(*firstelement) != reflex.end())
+            {
+              firstelement++;
+              nextnext++;
+              prev1++;
+              prev2++;
+              nextnext = nextnext == vindices.end() ? vindices.begin()
+                                                    : nextnext;
+              prev2 =
+                  prev2 == vindices.end() ? vindices.begin() : prev2;
+              prev1 =
+                  prev1 == vindices.end() ? vindices.begin() : prev1;
+              firstelement = firstelement == vindices.end()
+                                 ? vindices.begin()
+                                 : firstelement;
+            }
+            else
+            {
+              v0 = cs.face[*prev1];
+              reflexelement = reflex.find(*prev1) == reflex.end()
+                                  ? 0
+                                  : (1 && (switcher = 1));
+              v1 = cs.face[*nextnext];
+              reflexelement = reflex.find(*nextnext) == reflex.end()
+                                  ? (reflexelement && (switcher = 1))
+                              : reflexelement == 0
+                                  ? (reflexelement && (switcher = 2))
+                                  : reflexelement += 1;
+              v2 = cs.face[std::next(nextnext) == vindices.end()
+                               ? *vindices.begin()
+                               : *nextnext];
+
+              if (reflexelement == reflex.size())
+              {
+                cs.triangles.emplace_back(
+                    std::array<uint32_t, 3>{
+                        v0, cs.face[*firstelement], v1});
+                uint64_t edge = MakeEdge(v0, cs.face[*firstelement]);
+                edgeIndexSet.insert(edge);
+                edge = MakeEdge(v0, v1);
+                edgeIndexSet.insert(edge);
+                edge = MakeEdge(cs.face[*firstelement], v1);
+                edgeIndexSet.insert(edge);
+                firstelement = vindices.erase(firstelement);
+                /*std::cout << "reflex.size() is reflexelement" << std::endl;
+                std::cout << "Triangle: " << v0 << " "
+                      << cs.fvi[i].ver[*firstelement].v - 1 << " "
+                      << v1 << std::endl;*/
+                nextnext++;
+                switch (switcher)
+                {
+                case 1:
+                  rv1 = {cs.vpc[v0 * 3] -
+                             cs.vpc[cs.face[*prev2] * 3],
+                         cs.vpc[v0 * 3 + 2] -
+                             cs.vpc[cs.face[*prev2] * 3 + 2]};
+                  rv2 = {cs.vpc[v1 * 3] -
+                             cs.vpc[cs.face[*prev2] * 3],
+                         cs.vpc[v1 * 3 + 2] -
+                             cs.vpc[cs.face[*prev2] * 3 + 2]};
+                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                  {
+                    reflex.erase(*prev1);
+                  }
+                  break;
+                case 2:
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v0 * 3],
+                         cs.vpc[v1 * 3 + 2] - cs.vpc[v0 * 3 + 2]};
+                  rv2 = {cs.vpc[v2 * 3] - cs.vpc[v0 * 3],
+                         cs.vpc[v2 * 3 + 2] - cs.vpc[v0 * 3 + 2]};
+                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                  {
+                    reflex.erase(*firstelement);
+
+                    break;
+                  }
+                }
+              }
+              else if (reflexelement > 0)
+              {
+                // std::cout << "reflex.size() is > reflexelement" << std::endl;
+                valid = false;
+                for (size_t j = 0; j < reflex.size(); j++)
+                {
+                  std::array<float, 2> p = {
+                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3],
+                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3 + 2]}; // the vertex of the polygon
+                  std::array<float, 2> tp1 = {cs.vpc[v0 * 3], cs.vpc[v0 * 3 + 2]};
+                  std::array<float, 2> tp2 = {cs.vpc[v1 * 3], cs.vpc[v1 * 3 + 2]};
+                  std::array<float, 2> tp3 = {cs.vpc[v2 * 3], cs.vpc[v2 * 3 + 2]};
+                  struct CPpair
+                  {
+                    float ad = 0;
+                    float bc = 0;
+                    float product = ad - bc;
+                  } ABP, ACP, BCP;
+                  ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
+                  ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
+                  ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
+                  ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
+                  BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
+                  BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
+                  ABP.product = ABP.ad - ABP.bc;
+                  ACP.product = ACP.ad - ACP.bc;
+                  BCP.product =
+                      BCP.ad -
+                      BCP.bc; // we are calculating the normals of the
+                              // triangle's sides with an another
+                              // polygon vertex(obv. we are taking
+                              // each side and the current vertex to
+                              // it),
+                  // we are taking the normal relative to a vertex of
+                  // the potential triangle , and rotate through the
+                  // triangle in ccw
+                  valid = (ABP.product > limit) &&
+                          (ACP.product > limit) &&
+                          (BCP.product > limit);
+                  if (valid ==
+                      true)
+                  { // we exclude go step 1 forward in
+                    // potential triangle vertices, because
+                    // the last 1 was invalid
+                    // std::cout<< "face invalid" << std::endl;
+                    firstelement++;
+                    prev1++;
+                    prev2++;
+                    prev2 = prev2 == vindices.end() ? vindices.begin()
+                                                    : prev2;
+                    prev1 = prev1 == vindices.end() ? vindices.begin()
+                                                    : prev1;
+                    firstelement = firstelement == vindices.end()
+                                       ? vindices.begin()
+                                       : firstelement;
+                    break;
+                  }
+                }
+                if (valid == false)
+                {
+                  cs.triangles.emplace_back(
+                      std::array<uint32_t, 3>{
+                          v0, cs.face[*firstelement],
+                          v1});
+                  uint64_t edge = MakeEdge(v0, cs.face[*firstelement]);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(v0, v1);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(cs.face[*firstelement], v1);
+                  edgeIndexSet.insert(edge);
+                  firstelement = vindices.erase(firstelement);
+
+                  /*std::cout << "Triangle: " << v0 << " "
+                      << cs.fvi[i].ver[*firstelement].v - 1 << " "
+                      << v1 << std::endl;*/
+                  switch (switcher)
+                  {
+                  case 1:
+                    rv1 = {cs.vpc[v0 * 3] -
+                               cs.vpc[cs.face[*prev2] * 3],
+                           cs.vpc[v0 * 3 + 2] -
+                               cs.vpc[cs.face[*prev2] * 3 + 2]};
+                    rv2 = {cs.vpc[v1 * 3] -
+                               cs.vpc[cs.face[*prev2] * 3],
+                           cs.vpc[v1 * 3 + 2] -
+                               cs.vpc[cs.face[*prev2] * 3 + 2]};
+                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                    {
+                      reflex.erase(*prev1);
+                    }
+                    break;
+                  case 2:
+                    rv1 = {cs.vpc[v1 * 3] - cs.vpc[v0 * 3],
+                           cs.vpc[v1 * 3 + 2] - cs.vpc[v0 * 3 + 2]};
+                    rv2 = {cs.vpc[v2 * 3] - cs.vpc[v0 * 3],
+                           cs.vpc[v2 * 3 + 2] - cs.vpc[v0 * 3 + 2]};
+                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                    {
+                      reflex.erase(*firstelement);
+
+                      break;
+                    }
+                  }
+                }
+              }
+              else
+              {
+                valid = false;
+                // std::cout << "reflexelement is 0" << std::endl;
+                for (size_t j = 0; j < reflex.size(); j++)
+                {
+                  std::array<float, 2> p = {
+                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3],
+                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3 + 2]}; // the vertex of the polygon
+                  std::array<float, 2> tp1 = {cs.vpc[v0 * 3], cs.vpc[v0 * 3 + 2]};
+                  std::array<float, 2> tp2 = {cs.vpc[v1 * 3], cs.vpc[v1 * 3 + 2]};
+                  std::array<float, 2> tp3 = {cs.vpc[v2 * 3], cs.vpc[v2 * 3 + 2]};
+                  struct CPpair
+                  {
+                    float ad = 0;
+                    float bc = 0;
+                    float product = ad - bc;
+                  } ABP, ACP, BCP;
+                  ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
+                  ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
+                  ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
+                  ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
+                  BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
+                  BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
+                  ABP.product = ABP.ad - ABP.bc;
+                  ACP.product = ACP.ad - ACP.bc;
+                  BCP.product =
+                      BCP.ad -
+                      BCP.bc; // we are calculating the normals of the
+                              // triangle's sides with an another
+                              // polygon vertex(obv. we are taking
+                              // each side and the current vertex to
+                              // it),
+                  // we are taking the normal relative to a vertex of
+                  // the potential triangle , and rotate through the
+                  // triangle in ccw
+                  valid = (ABP.product > limit) &&
+                          (ACP.product > limit) &&
+                          (BCP.product > limit);
+                  if (valid ==
+                      true)
+                  { // we exclude go step 1 forward in
+                    // potential triangle vertices, because
+                    // the last 1 was invalid
+                    // std::cout<< "face invalid" << std::endl;
+                    firstelement++;
+                    prev1++;
+                    prev2++;
+                    prev2 = prev2 == vindices.end() ? vindices.begin()
+                                                    : prev2;
+                    prev1 = prev1 == vindices.end() ? vindices.begin()
+                                                    : prev1;
+                    firstelement = firstelement == vindices.end()
+                                       ? vindices.begin()
+                                       : firstelement;
+                    break;
+                  }
+                }
+                if (valid == false)
+                {
+                  cs.triangles.emplace_back(
+                      std::array<uint32_t, 3>{
+                          v0, cs.face[*firstelement],
+                          v1});
+                  uint64_t edge = MakeEdge(v0, cs.face[*firstelement]);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(v0, v1);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(cs.face[*firstelement], v1);
+                  edgeIndexSet.insert(edge);
+                  // std::cout << "Triangle: " << v0 << " "<< cs.fvi[i].ver[*firstelement].v - 1 << " "<< v1 << std::endl;
+                  firstelement = vindices.erase(firstelement);
+                  firstelement++;
+                  prev1++;
+                  prev2++;
+                  prev2 = prev2 == vindices.end() ? vindices.begin()
+                                                  : prev2;
+                  prev1 = prev1 == vindices.end() ? vindices.begin()
+                                                  : prev1;
+                  firstelement = firstelement == vindices.end()
+                                     ? vindices.begin()
+                                     : firstelement;
+                }
+                continue;
+              }
+            }
+          }
+        }
+
+        break;
+      }
+      case 2:
+      {
+        std::list<uint32_t>::iterator back;
+        if (x > 0)
+        { // we are ordering here based on winding. The normal
+          // tells us, which way are the vertices ordered
+          for (size_t j = 0; j < cs.face.size(); j++)
+          {
+            if (j < 2)
+            {
+              vindices.push_back(j);
+            }
+            else if (j >= 2 && j < cs.face.size() - 1)
+            {
+              vindices.push_back(j);
+              v2 = cs.face[j - 2];
+              v1 = cs.face[j - 1];
+              v0 = cs.face[j];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(j - 1);
+              }
+            }
+            else
+            {
+              vindices.push_back(j);
+              v2 = cs.face[j - 2];
+              v1 = cs.face[j - 1];
+              v0 = cs.face[j];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(j - 1);
+              } // until here, the cycle is same as above
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[0];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(j);
+              }
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[1];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(0);
+              }
+            }
+          }
+        }
+        else
+        {
+          for (int j = 0; j < cs.face.size(); j++)
+          {
+            if (j < 2)
+            {
+              vindices.push_back(cs.face.size() - 1 - j);
+            }
+            else if (j >= 2 && j < cs.face.size() - 1)
+            {
+              vindices.push_back(cs.face.size() - 1 - j);
+              v2 = cs.face[cs.face.size() + 1 - j];
+              v1 = cs.face[cs.face.size() - j];
+              v0 = cs.face[cs.face.size() - 1 - j];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(cs.face.size() - j);
+              }
+            }
+            else
+            {
+              vindices.push_back(cs.face.size() - 1 - j);
+              v2 = cs.face[cs.face.size() + 1 - j];
+              v1 = cs.face[cs.face.size() - j];
+              v0 = cs.face[cs.face.size() - 1 - j];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(cs.face.size() - j);
+              } // until here, the cycle is same as above
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[*(vindices.begin())];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(0);
+              }
+              v2 = v1;
+              v1 = v0;
+              v0 = cs.face[*(std::next(vindices.begin(), 1))];
+              rv1 = {cs.vpc[v1 * 3] - cs.vpc[v2 * 3], cs.vpc[v1 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              rv2 = {cs.vpc[v0 * 3] - cs.vpc[v2 * 3], cs.vpc[v0 * 3 + 1] - cs.vpc[v2 * 3 + 1]};
+              if (rv1[0] * rv2[1] - rv1[1] * rv2[0] <= 0)
+              {
+                reflex.insert(cs.face.size() - 1);
+              }
+            }
+          }
+        }
+        std::list<uint32_t>::iterator step = {
+            std::next(vindices.begin(), 1)};
+        uint32_t reflexelement{0};
+        uint32_t switcher;
+        bool valid;
+        std::list<uint32_t>::iterator firstelement{vindices.begin()};
+        std::list<uint32_t>::iterator nextnext{
+            std::next(vindices.begin(), 1)};
+        std::list<uint32_t>::iterator prev1{
+            std::prev(vindices.end(), 1)};
+        std::list<uint32_t>::iterator prev2{
+            std::prev(vindices.end(), 2)};
+        reflex.clear();
+        // std::cout << "I made it to while loop in case 2" << std::endl;
+        while (vindices.size() >= 3)
+        {
+          if (reflex.empty() == 1)
+          {
+            cs.triangles.emplace_back(std::array<uint32_t, 3>{
+                cs.face[*vindices.begin()],
+                cs.face[*step],
+                cs.face[*(std::next(step, 1))]});
+            uint64_t edge = MakeEdge(cs.face[*vindices.begin()], cs.face[*step]);
+            edgeIndexSet.insert(edge);
+            edge = MakeEdge(cs.face[*vindices.begin()], cs.face[*(std::next(step, 1))]);
+            edgeIndexSet.insert(edge);
+            edge = MakeEdge(cs.face[*step], cs.face[*(std::next(step, 1))]);
+            edgeIndexSet.insert(edge);
+            step = vindices.erase(step);
+            // std::cout<< "face valid" << std::endl;
+            // std::cout k++;<< "I have removed: " << v1+1 << std::endl;
+            // std::cout << "Triangle
+            // "<<cs.triangles[cs.triangles.size()-1][0] << " " <<
+            // cs.triangles[cs.triangles.size()-1][1] << " "<<
+            // cs.triangles[cs.triangles.size()-1][2]<< std::endl;
+          }
+          else
+          {
+            if (reflex.find(*firstelement) != reflex.end())
+            {
+              firstelement++;
+              nextnext++;
+              prev1++;
+              prev2++;
+              nextnext = nextnext == vindices.end() ? vindices.begin()
+                                                    : nextnext;
+              prev2 =
+                  prev2 == vindices.end() ? vindices.begin() : prev2;
+              prev1 =
+                  prev1 == vindices.end() ? vindices.begin() : prev1;
+              firstelement = firstelement == vindices.end()
+                                 ? vindices.begin()
+                                 : firstelement;
+            }
+            else
+            {
+              v0 = cs.face[*prev1];
+              reflexelement = reflex.find(*prev1) == reflex.end()
+                                  ? 0
+                                  : (1 && (switcher = 1));
+              v1 = cs.face[*nextnext];
+              reflexelement = reflex.find(*nextnext) == reflex.end()
+                                  ? (reflexelement && (switcher = 1))
+                              : reflexelement == 0
+                                  ? (reflexelement && (switcher = 2))
+                                  : reflexelement += 1;
+              v2 = cs.face[std::next(nextnext) == vindices.end()
+                               ? *vindices.begin()
+                               : *nextnext];
+
+              if (reflexelement == reflex.size())
+              {
+                cs.triangles.emplace_back(
+                    std::array<uint32_t, 3>{
+                        v0, cs.face[*firstelement], v1});
+                uint64_t edge = MakeEdge(v0, cs.face[*firstelement]);
+                edgeIndexSet.insert(edge);
+                edge = MakeEdge(v0, v1);
+                edgeIndexSet.insert(edge);
+                edge = MakeEdge(cs.face[*firstelement], v1);
+                edgeIndexSet.insert(edge);
+                firstelement = vindices.erase(firstelement);
+                nextnext++;
+                switch (switcher)
+                {
+                case 1:
+                  rv1 = {
+                      cs.vpc[v0 * 3] - cs.vpc[cs.face[*prev2] * 3],
+                      cs.vpc[v0 * 3 + 1] - cs.vpc[cs.face[*prev2] * 3 + 1]};
+                  rv2 = {
+                      cs.vpc[v1 * 3] - cs.vpc[cs.face[*prev2] * 3],
+                      cs.vpc[v1 * 3 + 1] - cs.vpc[cs.face[*prev2] * 3 + 1]};
+                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                  {
+                    reflex.erase(*prev1);
+                  }
+                  break;
+                case 2:
+                  rv1 = {cs.vpc[v1 * 3] - cs.vpc[v0 * 3],
+                         cs.vpc[v1 * 3 + 1] - cs.vpc[v0 * 3 + 1]};
+                  rv2 = {cs.vpc[v2 * 3] - cs.vpc[v0 * 3],
+                         cs.vpc[v2 * 3 + 1] - cs.vpc[v0 * 3 + 1]};
+                  if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                  {
+                    reflex.erase(*firstelement);
+
+                    break;
+                  }
+                }
+              }
+              else if (reflexelement > 0)
+              {
+                valid = false;
+                for (size_t j = 0; j < reflex.size(); j++)
+                {
+                  std::array<float, 2> p = {
+                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3],
+                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3 + 1]}; // the vertex of the polygon
+                  std::array<float, 2> tp1 = {cs.vpc[v0 * 3], cs.vpc[v0 * 3 + 1]};
+                  std::array<float, 2> tp2 = {cs.vpc[v1 * 3], cs.vpc[v1 * 3 + 1]};
+                  std::array<float, 2> tp3 = {cs.vpc[v2 * 3], cs.vpc[v2 * 3 + 1]};
+                  struct CPpair
+                  {
+                    float ad = 0;
+                    float bc = 0;
+                    float product = ad - bc;
+                  } ABP, ACP, BCP;
+                  ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
+                  ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
+                  ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
+                  ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
+                  BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
+                  BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
+                  ABP.product = ABP.ad - ABP.bc;
+                  ACP.product = ACP.ad - ACP.bc;
+                  BCP.product =
+                      BCP.ad -
+                      BCP.bc; // we are calculating the normals of the
+                              // triangle's sides with an another
+                              // polygon vertex(obv. we are taking each
+                              // side and the current vertex to it),
+                  // we are taking the normal relative to a vertex of
+                  // the potential triangle , and rotate through the
+                  // triangle in ccw
+                  valid = (ABP.product > limit) &&
+                          (ACP.product > limit) &&
+                          (BCP.product > limit);
+                  if (valid ==
+                      true)
+                  { // we exclude go step 1 forward in
+                    // potential triangle vertices, because
+                    // the last 1 was invalid
+                    // std::cout<< "face invalid" << std::endl;
+                    firstelement++;
+                    prev1++;
+                    prev2++;
+                    prev2 = prev2 == vindices.end() ? vindices.begin()
+                                                    : prev2;
+                    prev1 = prev1 == vindices.end() ? vindices.begin()
+                                                    : prev1;
+                    firstelement = firstelement == vindices.end()
+                                       ? vindices.begin()
+                                       : firstelement;
+                    break;
+                  }
+                }
+                if (valid == false)
+                {
+                  cs.triangles.emplace_back(
+                      std::array<uint32_t, 3>{
+                          v0, cs.face[*firstelement], v1});
+                  uint64_t edge = MakeEdge(v0, cs.face[*firstelement]);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(v0, v1);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(cs.face[*firstelement], v1);
+                  edgeIndexSet.insert(edge);
+                  firstelement = vindices.erase(firstelement);
+
+                  switch (switcher)
+                  {
+                  case 1:
+                    rv1 = {
+                        cs.vpc[v0 * 3] - cs.vpc[cs.face[*prev2] * 3],
+                        cs.vpc[v0 * 3 + 1] - cs.vpc[cs.face[*prev2] * 3 + 1]};
+                    rv2 = {
+                        cs.vpc[v1 * 3] - cs.vpc[cs.face[*prev2] * 3],
+                        cs.vpc[v1 * 3 + 1] - cs.vpc[cs.face[*prev2] * 3 + 1]};
+                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                    {
+                      reflex.erase(*prev1);
+                    }
+                    break;
+                  case 2:
+                    rv1 = {cs.vpc[v1 * 3] - cs.vpc[v0 * 3],
+                           cs.vpc[v1 * 3 + 1] - cs.vpc[v0 * 3 + 1]};
+                    rv2 = {cs.vpc[v2 * 3] - cs.vpc[v0 * 3],
+                           cs.vpc[v2 * 3 + 1] - cs.vpc[v0 * 3 + 1]};
+                    if (rv1[0] * rv2[1] - rv1[1] * rv2[0] >= 0)
+                    {
+                      reflex.erase(*firstelement);
+
+                      break;
+                    }
+                  }
+                }
+              }
+              else
+              {
+                valid = false;
+                for (size_t j = 0; j < reflex.size(); j++)
+                {
+                  std::array<float, 2> p = {
+                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3],
+                      cs.vpc[cs.face[*(std::next(reflex.begin(), j))] * 3 + 1]}; // the vertex of the polygon
+                  std::array<float, 2> tp1 = {cs.vpc[v0 * 3], cs.vpc[v0 * 3 + 1]};
+                  std::array<float, 2> tp2 = {cs.vpc[v1 * 3], cs.vpc[v1 * 3 + 1]};
+                  std::array<float, 2> tp3 = {cs.vpc[v2 * 3], cs.vpc[v2 * 3 + 1]};
+                  struct CPpair
+                  {
+                    float ad = 0;
+                    float bc = 0;
+                    float product = ad - bc;
+                  } ABP, ACP, BCP;
+                  ABP.ad = (tp2[0] - tp1[0]) * (p[1] - tp1[1]);
+                  ABP.bc = (tp2[1] - tp1[1]) * (p[0] - tp1[0]);
+                  ACP.ad = (tp1[0] - tp3[0]) * (p[1] - tp3[1]);
+                  ACP.bc = (tp1[1] - tp3[1]) * (p[0] - tp3[0]);
+                  BCP.ad = (tp3[0] - tp2[0]) * (p[1] - tp2[1]);
+                  BCP.bc = (tp3[1] - tp2[1]) * (p[0] - tp2[0]);
+                  ABP.product = ABP.ad - ABP.bc;
+                  ACP.product = ACP.ad - ACP.bc;
+                  BCP.product =
+                      BCP.ad -
+                      BCP.bc; // we are calculating the normals of the
+                              // triangle's sides with an another
+                              // polygon vertex(obv. we are taking each
+                              // side and the current vertex to it),
+                  // we are taking the normal relative to a vertex of
+                  // the potential triangle , and rotate through the
+                  // triangle in ccw
+                  valid = (ABP.product > limit) &&
+                          (ACP.product > limit) &&
+                          (BCP.product > limit);
+                  if (valid ==
+                      true)
+                  { // we exclude go step 1 forward in
+                    // potential triangle vertices, because
+                    // the last 1 was invalid
+                    // std::cout<< "face invalid" << std::endl;
+                    firstelement++;
+                    prev1++;
+                    prev2++;
+                    prev2 = prev2 == vindices.end() ? vindices.begin()
+                                                    : prev2;
+                    prev1 = prev1 == vindices.end() ? vindices.begin()
+                                                    : prev1;
+                    firstelement = firstelement == vindices.end()
+                                       ? vindices.begin()
+                                       : firstelement;
+                    break;
+                  }
+                }
+                if (valid == false)
+                {
+                  cs.triangles.emplace_back(
+                      std::array<uint32_t, 3>{
+                          v0, cs.face[*firstelement], v1});
+                  uint64_t edge = MakeEdge(v0, cs.face[*firstelement]);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(v0, v1);
+                  edgeIndexSet.insert(edge);
+                  edge = MakeEdge(cs.face[*firstelement], v1);
+                  edgeIndexSet.insert(edge);
+                  firstelement = vindices.erase(firstelement);
+                  firstelement++;
+                  prev1++;
+                  prev2++;
+                  prev2 = prev2 == vindices.end() ? vindices.begin()
+                                                  : prev2;
+                  prev1 = prev1 == vindices.end() ? vindices.begin()
+                                                  : prev1;
+                  firstelement = firstelement == vindices.end()
+                                     ? vindices.begin()
+                                     : firstelement;
+                }
+                continue;
+              }
+            }
+          }
+        }
+        break;
+      }
+      }
+      cs.triangles.shrink_to_fit();
+      cs.edge.reserve(edgeIndexSet.size() * 2);
+      for (uint64_t index : edgeIndexSet)
+      {
+        cs.edge.push_back(index >> 32);
+        cs.edge.push_back(index & 0xFFFFFFFF);
+      }
+    }
       else
       {
         cs.triangles.emplace_back(std::array<uint32_t, 3>{

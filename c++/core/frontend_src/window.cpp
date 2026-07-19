@@ -2,12 +2,11 @@
 #include <cmath>
 #include <SDL3/SDL.h>
 #include <glad/glad.h>
-#include <chrono>
 #include "glmain.h"
 #include "window.h"
 #include "shader.h"
 #include "3dvfunc.h"
-#include "thread"
+//#include "myimgui.h"
 
 bool Window::MMB() {
     SDL_PumpEvents();
@@ -102,7 +101,7 @@ void Window::Init()
 };
         void Window::Mainloop()
         {
-            std::vector<std::string> filenames = {"../../example/monkey.obj"};
+            std::vector<std::string> filenames = {"../../example/humanoid_quad.obj"};
             GL::Compile(filenames);
             //GLuint tbo;
             //glGenBuffers(1, &tbo);
@@ -127,8 +126,10 @@ void Window::Init()
             float rad = 0.01745329;
             int8_t fovdeg = 40;
             float FOV = std::tan(rad*fovdeg);
+            //GUIInit();
             while (running)
             {
+                //MainMenu();
                 while (SDL_PollEvent(&e) == true)
                 {
                     if (e.type == SDL_EVENT_QUIT)
@@ -237,9 +238,9 @@ void Window::Init()
                                 GLint perspectiveloc = glGetUniformLocation(GL::shader->program_index, "perspective");
                                 glUniformMatrix4fv(perspectiveloc, 1, GL_FALSE, &perspective[0]);
                             }
-                            float diffx = (GL::gCameraDesc[0][0] - GL::gCamera[0]) * e.wheel.y;
-                            float diffz = (GL::gCameraDesc[0][1] - GL::gCamera[1]) * e.wheel.y;
-                            float diffy = (GL::gCameraDesc[0][2] - GL::gCamera[2]) * -e.wheel.y;
+                            float diffx = (GL::gCameraDesc[1][0] - GL::gCamera[0]) * e.wheel.y;
+                            float diffz = (GL::gCameraDesc[1][1] - GL::gCamera[1]) * e.wheel.y;
+                            float diffy = (GL::gCameraDesc[1][2] - GL::gCamera[2]) * -e.wheel.y;
                             
                                 //std::cout << "horizontal: " << e.wheel.x << " " << "vertical: " << e.wheel.y << std::endl;
                                 GL::gCamera[0] += diffx;
@@ -417,7 +418,6 @@ void Window::Init()
         void Window::Clean()
         {
             glDeleteVertexArrays(GL::VAOvec.size(), GL::VAOvec.data());
-            glDeleteBuffers(GL::cVBOvec.size(), GL::cVBOvec.data());
             glDeleteBuffers(GL::pVBOvec.size(), GL::pVBOvec.data());
             glDeleteBuffers(GL::EBOvec.size(), GL::EBOvec.data());
             SDL_GL_DestroyContext(glContext);
