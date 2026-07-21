@@ -172,6 +172,7 @@ inline uint64_t MakeEdge(uint32_t a, uint32_t b)
     }
     if(cs.face.size() == 0) {
       std::cout << "something went wrong with the faces" << std::endl;
+      std::cout << cs.face.size() << std::endl;
       return false;
     }
     cs.detailes[0] = minx;

@@ -17,7 +17,7 @@ namespace GL
     extern std::vector<GLuint> EBOvec;
     extern std::vector<GLuint> lEBOvec;
     void Compile(const std::vector<std::string> &files);
-    void Draw(uint16_t* screenWidth, uint16_t* screenHeight); 
+    void Draw(float prevx, float prevy, GLuint& grVAO, GLuint& grVBO); 
     
 }
 #endif

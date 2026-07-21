@@ -101,14 +101,23 @@ void Window::Init()
 };
         void Window::Mainloop()
         {
-            std::vector<std::string> filenames = {"../../example/humanoid_quad.obj"};
-            GL::Compile(filenames);
+            
             //GLuint tbo;
             //glGenBuffers(1, &tbo);
             //glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, tbo);
             //glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, (objIdent::objects.back().vpc.size())/3 * 4 * sizeof(float), nullptr, GL_DYNAMIC_READ);
             //glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tbo);
             
+            GLuint gridVAO {};
+            GLuint gridVBO {};
+            glGenVertexArrays(1, &gridVAO);
+            glBindVertexArray(gridVAO);
+            glGenBuffers(1, &gridVBO);
+            glVertexAttribPointer(1, 2,  GL_FLOAT, GL_FALSE, sizeof(std::pair<float, float>), (void*)0);
+            glEnableVertexAttribArray(1);
+
+            std::vector<std::string> filenames = {"../../example/humanoid_quad.obj"};
+            GL::Compile(filenames);
             bool running = true;
             SDL_Event e;
             //glEnable(GL_RASTERIZER_DISCARD); // skip actual rendering while capturing
@@ -126,9 +135,13 @@ void Window::Init()
             float rad = 0.01745329;
             int8_t fovdeg = 40;
             float FOV = std::tan(rad*fovdeg);
+            float prevx {};
+            float prevy {};
             //GUIInit();
             while (running)
             {
+                prevx = GL::gCamera[0];
+                prevy = GL::gCamera[2];
                 //MainMenu();
                 while (SDL_PollEvent(&e) == true)
                 {
@@ -411,7 +424,7 @@ void Window::Init()
                         GLint cameraloc = glGetUniformLocation(GL::shader->program_index, "translation");
                             glUniformMatrix4fv(cameraloc, 1, GL_FALSE, &translation[0]);
                     }
-                    GL::Draw(&GL::gWindowWidth, &GL::gWindowHeight);
+                    GL::Draw(prevx, prevy, gridVAO, gridVBO);
                     SDL_GL_SwapWindow(window);
                 }
         };
