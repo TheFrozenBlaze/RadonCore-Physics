@@ -1,94 +1,101 @@
-#include "3dvfunc.h"
-#include "glmain.h"
 #include "shader.h"
+#include "myimgui.h"
 #include <vector>
 #include <algorithm>
 #include <glad/glad.h>
 #include <cmath>
-#include <cstdint>
 
-GLuint VAO {};
-GLuint pVBO {};
-GLuint EBO {};
-GLuint lEBO {};
+#define GL_CHECK()                                      \
+    {                                                   \
+        GLenum err = glGetError();                      \
+        if (err != GL_NO_ERROR)                         \
+            std::cout << "GL ERROR: " << err            \
+                      << " line: " << __LINE__ << '\n'; \
+    }
 
-std::vector<GLuint> GL::VAOvec;
-std::vector<GLuint> GL::pVBOvec;
-std::vector<GLuint> GL::EBOvec;
-std::vector<GLuint> GL::lEBOvec;
-std::vector<std::pair<float, float>> gridvert;
-
+std::vector<std::pair<float, float>> GL::gridvert;
 
 uint16_t GL::gWindowHeight, GL::gWindowWidth;
-std::array<float,3> GL::gCamera;
-std::array<std::array<float,3>, 3> GL::gCameraDesc;
-std::vector<Coord> objIdent::objects;
+std::array<float, 3> GL::gCamera;
+std::array<std::array<float, 3>, 3> GL::gCameraDesc;
+
 
 Shader *GL::shader;
-void GL::Compile(const std::vector<std::string> &files)
+uint64_t GL::Compile(SimDet &det)
 {
-    objIdent obj;
-    obj.objects.reserve(obj.objects.size() + files.size());
-    
-        for (size_t i{}; i < files.size(); i++)
-        {
-            obj.objReader(files[i]);
-            Coord &cs = obj.objects.back();
-            
-            /*for (size_t i{}; i < cs.edge.size(); i++)
-            {
-                std::cout << "Edge" << " "<< cs.edge[i] << std::endl;
-            }
-            std::cout << "size" << " " << cs.vpc.size() << std::endl;*/
-            /*for(size_t i =0; i< cs.triangles.size(); i++) {
-            std::cout << "Triangle: "<< cs.triangles[i][0] << " " << cs.triangles[i][1] << " " << cs.triangles[i][2] << std::endl;
-            };
-            for (size_t i {}; i <cs.vpc.size(); i++) {
-                std::cout << cs.vpc[i] << std::endl;
-            }*/
-            glGenVertexArrays(1, &VAO);
-            glBindVertexArray(VAO);
-            GL::VAOvec.emplace_back(VAO);
-            glGenBuffers(1, &pVBO);
-            glGenBuffers(1, &EBO);
 
-            glGenBuffers(1, &lEBO);
-            // ebo
-
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, cs.triangles.size() * 3 * sizeof(uint32_t), cs.triangles.data(), GL_STATIC_DRAW);
-            GL::EBOvec.emplace_back(EBO);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lEBO);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, cs.edge.size() * sizeof(uint32_t), cs.edge.data(), GL_STATIC_DRAW);
-            GL::lEBOvec.emplace_back(lEBO);
-            // position vbo
-            glBindBuffer(GL_ARRAY_BUFFER, pVBO);
-            glBufferData(GL_ARRAY_BUFFER, cs.vpc.size() * sizeof(float), cs.vpc.data(), GL_DYNAMIC_DRAW);
-
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
-            GL::pVBOvec.emplace_back(pVBO);
-            glEnableVertexAttribArray(0);
-
-            glBindVertexArray(0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-            pVBO = 0;
-            VAO = 0;
-            EBO = 0;
-            lEBO = 0;
-        }
-}
-
-void GL::Draw(float prevx, float prevy, GLuint& grVAO, GLuint& grVBO)
+    /*for (size_t i{}; i < cs.edge.size(); i++)
     {
+        std::cout << "Edge" << " "<< cs.edge[i] << std::endl;
+    }
+    std::cout << "size" << " " << cs.vpc.size() << std::endl;*/
+    /*for(size_t i =0; i< cs.triangles.size(); i++) {
+    std::cout << "Triangle: "<< cs.triangles[i][0] << " " << cs.triangles[i][1] << " " << cs.triangles[i][2] << std::endl;
+    };
+    for (size_t i {}; i <cs.vpc.size(); i++) {
+        std::cout << cs.vpc[i] << std::endl;
+    }*/
+    glGenVertexArrays(1, &det.VAO);
+    glBindVertexArray(det.VAO);
 
-    objIdent obj;
-    glClearColor(0.2f, 0.1f, 0.2f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(0, 0, GL::gWindowWidth, GL::gWindowHeight);
+    glGenBuffers(1, &det.VBO);
+    glGenBuffers(1, &det.EBO);
+
+    glGenBuffers(1, &det.lEBO);
+
+    /*if(det.VAO != 0)
+    {
+        std::cout << "VAO done" << std::endl;
+    }*/
+    // ebo
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, det.EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, det.cs.triangles.size() * 3 * sizeof(uint32_t), det.cs.triangles.data(), GL_STATIC_DRAW);
+    /*if(det.EBO != 0)
+    {
+        std::cout << "EBO done" << std::endl;
+    }*/
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, det.lEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, det.cs.edge.size() * sizeof(uint32_t), det.cs.edge.data(), GL_STATIC_DRAW);
+    /*if(det.lEBO != 0)
+    {
+        std::cout << "lEBO done" << std::endl;
+    }*/
+    // position vbo
+    glBindBuffer(GL_ARRAY_BUFFER, det.VBO);
+    glBufferData(GL_ARRAY_BUFFER, det.cs.vpc.size() * sizeof(float), det.cs.vpc.data(), GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
+    glEnableVertexAttribArray(0);
+    /*if(det.VBO != 0)
+    {
+        std::cout << "VBO done" << std::endl;
+    }*/
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    // std::cout << "obj size" << obj.objects.size() << std::endl;
+    // std::cout << "success" << std::endl;
+    return 0;
+}
+void GL::DrawGrid(float prevx, float prevy, GLuint &grVAO, GLuint &grVBO) {
     GLint colorLoc = glGetUniformLocation(GL::shader->program_index, "uColor");
     GLint boolloc = glGetUniformLocation(GL::shader->program_index, "meshvgrid");
-   
+
+    /*   GLboolean enabled;
+    glGetBooleanv(GL_CULL_FACE, &enabled);
+
+    GLint mode;
+    glGetIntegerv(GL_CULL_FACE_MODE, &mode);
+
+    GLint front;
+    glGetIntegerv(GL_FRONT_FACE, &front);
+
+    std::cout
+        << "Cull enabled: " << enabled
+        << " mode: " << mode
+        << " front: " << front
+        << '\n';*/
+
     /*float minx= std::min({GL::gCameraDesc[0][0]-GL::gCamera[0],GL::gCameraDesc[1][0]-GL::gCamera[0], GL::gCameraDesc[2][0]-GL::gCamera[0], -GL::gCameraDesc[0][0]-GL::gCamera[0],-GL::gCameraDesc[1][0]-GL::gCamera[0], -GL::gCameraDesc[2][0]-GL::gCamera[0]});
     float maxx= std::max({GL::gCameraDesc[0][0]-GL::gCamera[0],GL::gCameraDesc[1][0]-GL::gCamera[0], GL::gCameraDesc[2][0]-GL::gCamera[0], -GL::gCameraDesc[0][0]-GL::gCamera[0],-GL::gCameraDesc[1][0]-GL::gCamera[0], -GL::gCameraDesc[2][0]-GL::gCamera[0]});
     float minz= std::min({GL::gCameraDesc[0][2]-GL::gCamera[2],GL::gCameraDesc[1][2]-GL::gCamera[2], GL::gCameraDesc[2][2]-GL::gCamera[2], -GL::gCameraDesc[0][2]-GL::gCamera[2],-GL::gCameraDesc[1][2]-GL::gCamera[2], -GL::gCameraDesc[2][2]-GL::gCamera[2]});
@@ -97,52 +104,91 @@ void GL::Draw(float prevx, float prevy, GLuint& grVAO, GLuint& grVBO)
     minx = std::roundf(minx * 100);
     maxx = std::roundf(maxx * 100);
     minz = std::roundf(minz * 100);
+
     maxz = std::roundf(maxz * 100);*/
+    // std::cout << "1\n";
     glBindVertexArray(grVAO);
+
+    // std::cout << "2\n";
     glBindBuffer(GL_ARRAY_BUFFER, grVBO);
 
-    if(prevx - GL::gCamera[0] > 10e-2 || prevy-GL::gCamera[2] > 10e-2 )
+    if (std::abs(prevx - GL::gCamera[0]) > 10e-2 || std::abs(prevy - GL::gCamera[2]) > 10e-2)
     {
-    gridvert.clear();
-    int minx = std::floor(GL::gCamera[0]-100)/10;
-    int maxx = std::floor(GL::gCamera[0]+100)/10;
-    int minz = std::floor(GL::gCamera[2]-100)/10;
-    int maxz = std::floor(GL::gCamera[2]+100)/10;
-    for(uint i{}; i < 20; i++) {
-        gridvert.emplace_back(std::pair<float, float>{(minx + i)*10, minz*10});
-        gridvert.emplace_back(std::pair<float, float>{(minx + i) * 10, maxz* 10});
-        gridvert.emplace_back(std::pair<float, float>{minx* 10, (minz + i) * 10}); 
-        gridvert.emplace_back(std::pair<float, float>{maxx* 10, (minz + i) * 10});
-    }
+        GL::gridvert.clear();
+        int minx = std::floor(GL::gCamera[0] - 100) / 10;
+        int maxx = std::floor(GL::gCamera[0] + 100) / 10;
+        int minz = std::floor(GL::gCamera[2] - 100) / 10;
+        int maxz = std::floor(GL::gCamera[2] + 100) / 10;
+        for (int x = minx; x <= maxx; x++)
+        {
+            GL::gridvert.emplace_back(std::pair<float, float>{x * 10.f, minz * 10.f});
+            GL::gridvert.emplace_back(std::pair<float, float>{x * 10.f, maxz * 10.f});
+        }
 
+        for (int z = minz; z <= maxz; z++)
+        {
+            GL::gridvert.emplace_back(std::pair<float, float>{minx * 10.f, z * 10.f});
+            GL::gridvert.emplace_back(std::pair<float, float>{maxx * 10.f, z * 10.f});
+        }
     }
-    //std::cout << "vertices = " << gridvert.size() << std::endl;
+    // std::cout << "vertices = " << gridvert.size() << std::endl;
+    // std::cout << "3\n";
     glUniform1i(boolloc, GL_TRUE);
-    glUniform3f(colorLoc, 1.f,1.f,1.f);
-    glBufferData(GL_ARRAY_BUFFER,gridvert.size() * sizeof(std::pair<float, float>), gridvert.data(), GL_DYNAMIC_DRAW);
-    glDrawArrays(GL_LINES, 0, gridvert.size() * 2);
-    for (size_t i{}; i < obj.objects.size(); i++) {
-        Coord &cs = obj.objects[i];
+    glUniform3f(colorLoc, 1.f, 1.f, 1.f);
+    glEnable(GL_DEPTH_TEST);
+    
+    glClear( GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, GL::gWindowWidth, GL::gWindowHeight);
 
-        
+    // std::cout << "4\n";
+    glBufferData(GL_ARRAY_BUFFER, GL::gridvert.size() * sizeof(std::pair<float, float>), GL::gridvert.data(), GL_DYNAMIC_DRAW);
+    // std::cout << "5\n";
+    glDrawArrays(GL_LINES, 0, GL::gridvert.size());
+};
+
+void GL::Draw(SimDef &currentProj)
+{
+
+    //glEnable(GL_CULL_FACE);
+    //glFrontFace(GL_CW);
+    //glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    
+    glClear( GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, GL::gWindowWidth, GL::gWindowHeight);
+    GLint colorLoc = glGetUniformLocation(GL::shader->program_index, "uColor");
+    GLint boolloc = glGetUniformLocation(GL::shader->program_index, "meshvgrid");
+
+    // std::cout << "6\n";
+    // glEnable(GL_CULL_FACE);
+    for (size_t i{}; i < currentProj.action.size(); i++)
+    {
+
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0f, 1.0f);
         glUniform1i(boolloc, GL_FALSE);
-        //std::cout << colorLoc << std::endl;
-        glUniform3f(colorLoc, 0.75f,0.75f,0.75f);
-        glBindVertexArray(GL::VAOvec[i]);
-        
-        glCullFace(GL_BACK);
-        glFrontFace(GL_CCW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GL::EBOvec[i]);
-        glDrawElements(GL_TRIANGLES, cs.triangles.size() * 3, GL_UNSIGNED_INT, nullptr);
-        //std::cout << colorLoc << std::endl;
-        glUniform3f(colorLoc, 0.f,0.f,0.f);
+        // std::cout << colorLoc << std::endl;
+        glUniform3f(colorLoc, 0.75f, 0.75f, 0.75f);
+        // std::cout << "7\n";
+        glBindVertexArray(currentProj.action[i].VAO);
+
+        // glCullFace(GL_BACK);
+        // GL_CHECK();
+        // glFrontFace(GL_CCW);
+        // GL_CHECK();
+        // std::cout << "8\n";
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, currentProj.action[i].EBO);
+        // std::cout << "9\n";
+        glDrawElements(GL_TRIANGLES, currentProj.action[i].cs.triangles.size() * 3, GL_UNSIGNED_INT, nullptr);
+        // std::cout << colorLoc << std::endl;
+        glUniform3f(colorLoc, 0.f, 0.f, 0.f);
         glDisable(GL_POLYGON_OFFSET_FILL);
-        //glDisable(GL_DEPTH_TEST);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GL::lEBOvec[i]);
+        // glDisable(GL_DEPTH_TEST);
+        // std::cout << "10\n";
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, currentProj.action[i].lEBO);
         glLineWidth(2.0f);
-        glDrawElements(GL_LINES, cs.edge.size(), GL_UNSIGNED_INT, nullptr);
+        // std::cout << "11\n";
+        glDrawElements(GL_LINES, currentProj.action[i].cs.edge.size(), GL_UNSIGNED_INT, nullptr);
 
         /*float minx= std::min({GL::gCameraDesc[0][0]-GL::gCamera[0],GL::gCameraDesc[1][0]-GL::gCamera[0], GL::gCameraDesc[2][0]-GL::gCamera[0], -GL::gCameraDesc[0][0]-GL::gCamera[0],-GL::gCameraDesc[1][0]-GL::gCamera[0], -GL::gCameraDesc[2][0]-GL::gCamera[0]});
         float maxx= std::max({GL::gCameraDesc[0][0]-GL::gCamera[0],GL::gCameraDesc[1][0]-GL::gCamera[0], GL::gCameraDesc[2][0]-GL::gCamera[0], -GL::gCameraDesc[0][0]-GL::gCamera[0],-GL::gCameraDesc[1][0]-GL::gCamera[0], -GL::gCameraDesc[2][0]-GL::gCamera[0]});
@@ -153,7 +199,8 @@ void GL::Draw(float prevx, float prevy, GLuint& grVAO, GLuint& grVBO)
         maxx = std::roundf(maxx * 100);
         minz = std::roundf(minz * 100);
         maxz = std::roundf(maxz * 100);*/
-        //glEnable(GL_DEPTH_TEST);
+        // glEnable(GL_DEPTH_TEST);
+        // std::cout << "12\n";
     }
-    }
-
+    // glDisable(GL_CULL_FACE);
+}

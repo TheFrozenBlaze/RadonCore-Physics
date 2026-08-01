@@ -2,27 +2,49 @@
 #define PHYSICS_H
 
 #include <cstdint>
-#include "physlayers.h"
+#include <cstdio>
+//#include "physlayers.h"
 #include <chrono>
+#include <glad/glad.h>
+
+#include "coord.h"
 struct SimDet {
 	std::vector<std::array<float, 3>> forces;
 	uint start;
 	uint finish;
-	Coord& cs;
-    Material* bodmat;
-	uint8_t meshboost;
+	Coord cs;
+    GLuint EBO;
+    GLuint lEBO;
+    GLuint VBO;
+    GLuint VAO;
+    //Material *bodmat;
+    uint8_t meshboost;
 };
 
-typedef struct SimDef {
+struct SimDef {
 	std::chrono::duration<double, std::milli> simdur;
 	uint tiles;
     double system_energy;
-    Material *surmats;
-    std::vector<SimDet *> action;
+    //Material* surmats;
+    std::vector<SimDet> action;
 };
-struct InitSettings {
-    std::vector<std::pair<std::array<float, 3>, Coord &>> speed;
+
+struct ProjectDef {
+    FILE* jsonPointer;
+    SimDef* simPointer;
+    std::string name;
+
+
+
 };
+
+
+
+struct InitSettings
+{
+    std::vector<std::pair<std::array<float, 3>, SimDet&>> speed;
+};
+
 
 namespace Physics
 {
@@ -40,7 +62,7 @@ namespace Physics
         Electrical,
         Structural
     };
-
+    extern std::vector<ProjectDef> projectQueue;
 
     inline PhysLayersFlags operator|(PhysLayersFlags a, PhysLayersFlags b)
 	{
@@ -55,8 +77,8 @@ namespace Physics
 			static_cast<uint32_t>(a) &
 			static_cast<uint32_t>(b));
 	};
-    SimDef *ConstructSim(std::vector<Coord>& cs);
-    InitSettings PreSimState(SimDef* def);
-    bool StartSim(SimDef* def, enum Physics::PhysLayersFlags flags, InitSettings& init);
+void AddElement(SimDef& def, Coord&& cs);
+    //InitSettings PreSimState(SimDef* def);
+    //bool StartSim(SimDef* def, enum Physics::PhysLayersFlags flags, InitSettings& init);
 };
 #endif

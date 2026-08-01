@@ -12,12 +12,9 @@ namespace GL
     extern uint16_t gWindowHeight, gWindowWidth;
     extern std::array<float,3> gCamera;
     extern std::array<std::array<float,3>, 3> gCameraDesc;
-    extern std::vector<GLuint> VAOvec;
-    extern std::vector<GLuint> pVBOvec;
-    extern std::vector<GLuint> EBOvec;
-    extern std::vector<GLuint> lEBOvec;
-    void Compile(const std::vector<std::string> &files);
-    void Draw(float prevx, float prevy, GLuint& grVAO, GLuint& grVBO); 
-    
+    extern std::vector<std::pair<float, float>> gridvert;
+    uint64_t Compile(SimDet &det);
+    void DrawGrid(float prevx, float prevy, GLuint &grVAO, GLuint &grVBO);
+    void Draw(SimDef &currentProj);
 }
 #endif

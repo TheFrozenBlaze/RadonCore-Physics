@@ -12,7 +12,7 @@ namespace Layer
 class Basic {
 public:
 	Basic(Coord& cs,Material& material) {
-		MyCL::VolumeCalc(cs);
+		//MyCL::VolumeCalc(cs);
 		vkInit();
 	};
 	~Basic();

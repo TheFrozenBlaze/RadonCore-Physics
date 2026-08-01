@@ -15,29 +15,11 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <filesystem>
+#include "physics.h"
 
 
-struct Coord {
-public:
 
-    // vertices
-    std::vector<float> vpc;
-    //vertex normals
-    std::vector<float> vnxc;
-    std::vector<float> vnyc;
-    std::vector<float> vnzc;
-    // transformed vertices
-    std::vector<float> tvxc;
-    std::vector<float> tvyc;
-    std::vector<float> tvzc;
-    //usable faces(that could be intersected)
-    std::vector<int> usable;
-    std::vector<std::array<uint32_t, 3>> triangles;
-    std::vector<uint32_t> face;
-    std::vector<std::vector<uint32_t>> intersections;
-    std::array<std::array<float, 3>, 6> detailes;
-    std::vector<uint32_t> edge;
-};
 class Rays {
   public:
     //endpoint
@@ -80,41 +62,41 @@ inline uint64_t MakeEdge(uint32_t a, uint32_t b)
         std::swap(a, b);
 
     return (static_cast<uint64_t>(a) << 32) | b;
-}
-    static std::vector<Coord> objects;
-    
-    bool objReader(const std::string &filename) {
-      objects.emplace_back();
-      Coord &cs = objects.back();
+} 
+    Coord objReader(const std::string &filename) {
+      Coord cs;
       std::array<float, 3> minx, maxx, miny, maxy, minz, maxz;
       std::ifstream file(filename);
       if (!file.is_open())
       {
         std::cout << "Error reading file: " << filename << std::endl;
-        return false;
+        EXIT_FAILURE;
       }
 
-    std::string line;
-    while (std::getline(file, line)) {
-      if (line.size() > 1 && line[0] == 'v' && line[1] == ' ') {
-        std::istringstream iss(line);
-        std::string v;
-        float x, y, z;
-        iss >> v >> x >> y >> z;
-        minx = x < minx[0] ? std::array<float,3>{x, y,z} : minx;
-        maxx = x > maxx[0] ? std::array<float,3>{x, y,z} : maxx;
-        miny = y < miny[1] ? std::array<float,3>{x, y,z} : miny;
-        maxy = y > maxy[1] ? std::array<float,3>{x, y,z} : maxy;
-        minz = z < minz[2] ? std::array<float,3>{x, y,z} : minz;
-        maxz = z > maxz[2] ? std::array<float,3>{x, y,z} : maxz;
-        
-        cs.vpc.push_back(x);
-        cs.vpc.push_back(y);
-        cs.vpc.push_back(z);
-        //std::cout << "added: " << x << " " << y << " " << z << std::endl;
-      }
-      else if (line.size() > 1 && line[0] == 'f' && line[1] == ' ')
+      cs.name = std::filesystem::path(filename).stem().string();
+      std::string line;
+      while (std::getline(file, line))
       {
+        if (line.size() > 1 && line[0] == 'v' && line[1] == ' ')
+        {
+          std::istringstream iss(line);
+          std::string v;
+          float x, y, z;
+          iss >> v >> x >> y >> z;
+          minx = x < minx[0] ? std::array<float, 3>{x, y, z} : minx;
+          maxx = x > maxx[0] ? std::array<float, 3>{x, y, z} : maxx;
+          miny = y < miny[1] ? std::array<float, 3>{x, y, z} : miny;
+          maxy = y > maxy[1] ? std::array<float, 3>{x, y, z} : maxy;
+          minz = z < minz[2] ? std::array<float, 3>{x, y, z} : minz;
+          maxz = z > maxz[2] ? std::array<float, 3>{x, y, z} : maxz;
+
+          cs.vpc.push_back(x);
+          cs.vpc.push_back(y);
+          cs.vpc.push_back(z);
+          // std::cout << "added: " << x << " " << y << " " << z << std::endl;
+        }
+        else if (line.size() > 1 && line[0] == 'f' && line[1] == ' ')
+        {
           line.erase(0, 2);      // cuts of the 'f' and the ' ' from the beginning
           int point = 0; // where the f-function writes its outputs (((2=v, 3=vt, 4=vn))
           int number = 0;
@@ -131,7 +113,7 @@ inline uint64_t MakeEdge(uint32_t a, uint32_t b)
                       
                       cs.face.emplace_back((std::stoi(numberstring)+(cs.vpc.size())/3) % (cs.vpc.size()/3 + 1));
                       numberstring.clear();
-                      Triangulator(objects.size()-1);
+                      Triangulator(cs);
                       cs.face.clear();
                       
                   }
@@ -165,23 +147,23 @@ inline uint64_t MakeEdge(uint32_t a, uint32_t b)
           }
         }
     cs.vpc.shrink_to_fit();
-    cs.face.shrink_to_fit();
+    //cs.face.shrink_to_fit();
     if(cs.vpc.size() == 0) {
       std::cout << "Something went wrong with the coords" << std::endl;
-      return false;
+      EXIT_FAILURE;
     }
-    if(cs.face.size() == 0) {
+    /*if(cs.face.size() == 0) {
       std::cout << "something went wrong with the faces" << std::endl;
       std::cout << cs.face.size() << std::endl;
       return false;
-    }
+    }*/
     cs.detailes[0] = minx;
     cs.detailes[1] = maxx;
     cs.detailes[2] = miny;
     cs.detailes[3] = maxy;
     cs.detailes[4] = minz;
     cs.detailes[5] = maxz;
-    return true;
+    return cs;
     };
 
   // Check vector intersection
@@ -283,9 +265,9 @@ inline uint64_t MakeEdge(uint32_t a, uint32_t b)
   // Without his series creating this function would have been a much more
   // excruciating process, and I would have probably never finished it, so thank
   // you 3Blue1Brown!
-  void Triangulator(uint32_t coordnum) {
+  void Triangulator(Coord& cs) {
     std::unordered_set<uint64_t> edgeIndexSet;
-    Coord &cs = objects[coordnum];
+
     float limit = 1e-6; // basicaly zero
     std::array<float, 3> normal = {0.0, 0.0, 0.0};
     uint8_t projection = 0;
@@ -1648,29 +1630,29 @@ inline uint64_t MakeEdge(uint32_t a, uint32_t b)
       }
     }
   
-void MoellerTrumbore(uint32_t vecnum, uint32_t coordnum)
+void MoellerTrumbore(uint32_t vecnum, SimDet& det)
 {
+  
   // AABB(vecnum, coordnum);
-  Coord &cs = objects[coordnum];
   Rays ray;
   float facedotprod;
-  cs.intersections.resize(cs.intersections.size() + 1);
-  cs.intersections.back().emplace_back(vecnum);
-  for (size_t i = 0; i < cs.usable.size(); i++)
+  det.cs.intersections.resize(det.cs.intersections.size() + 1);
+  det.cs.intersections.back().emplace_back(vecnum);
+  for (size_t i = 0; i < det.cs.usable.size(); i++)
   {
-    size_t j = cs.usable[i];
+    size_t j = det.cs.usable[i];
     std::array<float, 3> v0 = {
-        cs.vpc[cs.triangles[j][0]*3] - ray.stpxcoords[vecnum],
-        cs.vpc[cs.triangles[j][0]*3+1] - ray.stpycoords[vecnum],
-        cs.vpc[cs.triangles[j][0]*3+2] - ray.stpzcoords[vecnum]};
+        det.cs.vpc[det.cs.triangles[j][0]*3] - ray.stpxcoords[vecnum],
+        det.cs.vpc[det.cs.triangles[j][0]*3+1] - ray.stpycoords[vecnum],
+        det.cs.vpc[det.cs.triangles[j][0]*3+2] - ray.stpzcoords[vecnum]};
     std::array<float, 3> v1 = {
-        cs.vpc[cs.triangles[j][1]*3] - ray.stpxcoords[vecnum],
-        cs.vpc[cs.triangles[j][1]*3+1] - ray.stpycoords[vecnum],
-        cs.vpc[cs.triangles[j][1]*3+2] - ray.stpzcoords[vecnum]};
+        det.cs.vpc[det.cs.triangles[j][1]*3] - ray.stpxcoords[vecnum],
+        det.cs.vpc[det.cs.triangles[j][1]*3+1] - ray.stpycoords[vecnum],
+        det.cs.vpc[det.cs.triangles[j][1]*3+2] - ray.stpzcoords[vecnum]};
     std::array<float, 3> v2 = {
-        cs.vpc[cs.triangles[j][2]*3] - ray.stpxcoords[vecnum],
-        cs.vpc[cs.triangles[j][2]*3+1] - ray.stpycoords[vecnum],
-        cs.vpc[cs.triangles[j][2]*3+2] - ray.stpzcoords[vecnum]};
+        det.cs.vpc[det.cs.triangles[j][2]*3] - ray.stpxcoords[vecnum],
+        det.cs.vpc[det.cs.triangles[j][2]*3+1] - ray.stpycoords[vecnum],
+        det.cs.vpc[det.cs.triangles[j][2]*3+2] - ray.stpzcoords[vecnum]};
     std::array<float, 3> edge1 = {v1[0] - v0[0], v1[1] - v0[1],
                                   v1[2] - v0[2]};
     std::array<float, 3> edge2 = {v2[0] - v0[0], v2[1] - v0[1],
@@ -1719,13 +1701,13 @@ void MoellerTrumbore(uint32_t vecnum, uint32_t coordnum)
         0)
       continue;
 
-    cs.intersections.back().emplace_back(j);
+    det.cs.intersections.back().emplace_back(j);
   }
-  if (cs.intersections.back().size() == 1)
+  if (det.cs.intersections.back().size() == 1)
   {
-    cs.intersections.resize(cs.intersections.size() - 1);
+    det.cs.intersections.resize(det.cs.intersections.size() - 1);
   }
-  cs.usable.clear();
+  det.cs.usable.clear();
 }
 };
 

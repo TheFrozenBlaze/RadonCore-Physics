@@ -27,7 +27,7 @@ class Shader {
             fsfile.close();
             std::string vertexSource = vsread.str();
             std::string fragmentSource = fsread.str();
-
+            std::cout << vertexSource << std::endl;
             const char* vShaderCode = vertexSource.c_str();
             const char* fShaderCode = fragmentSource.c_str();
             uint vertex, fragment;
@@ -47,7 +47,7 @@ class Shader {
             glTransformFeedbackVaryings(program_index, 1, varyings, GL_INTERLEAVED_ATTRIBS);
             glLinkProgram(program_index);
             GLint success{};
-            GLchar* infoLog;
+            char infoLog[512];
             glGetProgramiv(program_index, GL_LINK_STATUS, &success);
             if (!success) {
             glGetProgramInfoLog(program_index, 512, NULL, infoLog);
