@@ -16,3 +16,5 @@ What will come in the next commit(hopefully)?
 -forward travel fixed
 -proper licensing
 -some support for windows
+
+This currently is a stable version of radon.
