@@ -1,0 +1,12 @@
+{
+    "format" : "RadonMaterial",
+    "version" : 1,
+    "basestate" : {
+        "state" : 0,
+        "temp" : 298.15,
+        "pressure" : 101325,
+        "density" : 2700,
+        "thermal_conduct" : 170
+
+    }
+}
