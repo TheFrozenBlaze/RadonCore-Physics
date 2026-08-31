@@ -33,7 +33,7 @@ namespace MyCL
 				std::cout << "Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(def_device) << std::endl;
 				exit(1);
 			}
-			kernel = cl::Kernel(program, kernel_name);
+			kernel = cl::Kernel(program, kernel_name.c_str());
 		};
 	};
 	// extern void MeshPopulator(Coord &cs, uint8_t precisiongradident);
