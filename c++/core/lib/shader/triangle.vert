@@ -6,14 +6,14 @@ layout (location = 1) in vec2 gPos;
 
 uniform mat4 translation;
 uniform mat4 perspective;
-vec3 pos;
+uniform mat4 orient;
 uniform bool meshvgrid;
 
 void main()
 {   
     if (meshvgrid)
-    gl_Position = perspective * translation *   vec4(gPos.x, 0.0, gPos.y, 1.0);
+    gl_Position = perspective * translation * orient * vec4(gPos.x, gPos.y, 0.0, 1.0);
     else
-    gl_Position = perspective * translation *   vec4(aPos, 1.0);
+    gl_Position = perspective * translation * orient * vec4(aPos, 1.0);
 }
 

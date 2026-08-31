@@ -23,6 +23,9 @@ public:
     std::vector<std::vector<uint32_t>> intersections;
     std::array<std::array<float, 3>, 6> detailes;
     std::vector<uint32_t> edge;
+    std::array<float, 3> COM;
+    float volume;
+    float mass;
 };
 
 #endif

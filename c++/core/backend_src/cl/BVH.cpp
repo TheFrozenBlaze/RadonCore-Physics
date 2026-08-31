@@ -1,108 +1,91 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#define CL_HPP_TARGET_OPENCL_VERSION 120
-#include <CL/opencl.h>
-#include <CL/cl.h>
-#include "vectorinf.h"
-#include "opencl_algorithm_lib.h"
+#include "clfunc.h"
 
-extern "C" __attribute__((visibility("default"))) void AABB(uint32_t vecnum, uint32_t objectnum) {
-    cl_platform_id platform;
-    cl_context context;
-    cl_device_id device;
-    cl_kernel kernel;
-    cl_program program;
-    cl_command_queue queue;
-    cl_mem triangle_buffer, vpc_buffer, min_buffer, max_buffer, usable_buffer, counter_buffer;
-    FILE *kernel_file;
-    size_t kernel_file_size, triangle_size, stpvec_size, vec_size, vertex_size, usable_size;
-    void *usable_pointer;
-    float *stpvec_pointer[3];
-    float*vec_pointer[3];
-    float*vertex_pointer;
-    char *kernel_file_buffer;
+std::vector<MyCL::Hit> MyCL::BVH(std::unique_ptr<Coord>& cs, Rays& rays, std::vector<float>* spec_rays, std::unique_ptr<MyCL::Basic>& demand) {
 
-    int err;
-    err = clGetPlatformIDs(1, &platform, NULL);
-    if(err < 0) {
-        printf("No platform, sucker");
-        return 1;
-    }
-    err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
-    if(err < 0) {
-        printf("Brother, I even support the gtx 900 series, get a rig ");
-        return 2;
-    }
-    context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
-    if(err < 0) {
-        printf("Couldn't create context");
-        return 3;
-    }
-    kernel_file = fopen("openclc_kernel.cl", "r");
-    fseek(kernel_file, 0, SEEK_END);
-    kernel_file_size = ftell(kernel_file);
-    fseek(kernel_file, 0, SEEK_SET);
-    kernel_file_buffer = (char *)malloc(kernel_file_size + 1);
-    kernel_file_buffer[kernel_file_size] = '\0';
-    fread(kernel_file_buffer, 1,kernel_file_size, kernel_file);
-    fclose(kernel_file);
-    program = clCreateProgramWithSource(context, 1,&kernel_file_buffer, &kernel_file_size, &err);
-    err = clBuildProgram(program, 1, &device, NULL, NULL, NULL);
-    Data d = GetVector(objectnum, 3, 0);
-    void* trianglepointer = d.data;
-    triangle_size = d.size;
-    d = GetVector(objectnum, 4, vecnum);
-    stpvec_pointer = d.data;
-    stpvec_size = d.size;
-    d = GetVector(objectnum, 5,vecnum);
-    vec_pointer = d.data;
-    vec_size = d.size;
-    d = GetVector(objectnum, 2, 0);
-    vertex_size = d.size;
-    vertex_pointer = d.data;
-    d = GetVector(objectnum, 0, 0);
-    usable_size = d.size;
-    usable_pointer = d.data;
-    uint32_t i =0;
-    cl_float4 minmax[2];
-    cl_uint counter = 0;
-    minmax[0] = {min(stpvec_pointer[0] + i, vec_pointer[0] + i), min(stpvec_pointer[1] + i, vec_pointer[1] + i), min(stpvec_pointer[2] + i, vec_pointer[2] + i), 0.f};
-    minmax[1] = {max(stpvec_pointer[0] + i, vec_pointer[0] + i), max(stpvec_pointer[1] + i, vec_pointer[1] + i), max(stpvec_pointer[2] + i, vec_pointer[2] + i), 0.f};
+	cl_int err;
+	
+	std::vector<cl_float4> clraystp;
+	std::vector<cl_float4> clray;
 
-    triangle_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, triangle_size * 3 * sizeof(uint32_t), trianglepointer, &err);
-    vpc_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vertex_size, vertex_pointer[0], &err);
-    usable_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, triangle_size * sizeof(int), usable_pointer, &err);
-    min_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float4), &minmax[0], &err);
-    max_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float4), &minmax[1], &err);
-    counter_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(uint), &counter, &err);
-    queue = clCreateCommandQueue(context, device, 0, &err);
-    kernel = clCreateKernel(program, "AABB", &err);
-    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &triangle_buffer);
-    err = clSetKernelArg(kernel, 1, sizeof(cl_mem), &vpc_buffer);
-    err = clSetKernelArg(kernel, 4, sizeof(cl_mem), &usable_buffer);
-    err = clSetKernelArg(kernel, 5, sizeof(cl_mem), &max_buffer);
-    err = clSetKernelArg(kernel, 6, sizeof(cl_mem), &min_buffer);
-    err = clSetKernelArg(kernel, 7, sizeof(uint), &triangle_size);
-    err = clSetKernelArg(kernel, 8, sizeof(cl_mem), &counter_buffer);
-    size_t triangle_count = triangle_size / (3 * sizeof(uint32_t));
-    size_t global_size = triangle_count;
-    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL,&global_size,NULL, 0, NULL, NULL);
-    d = GetVector(0, 0);
-    usable_size = d.size;
-    usable_pointer = d.data;
-    cl_uint result_count = 0;
-    err = clEnqueueReadBuffer(queue, counter_buffer, CL_TRUE, 0,sizeof(cl_uint), &result_count, 0, NULL, NULL);
-    err = clEnqueueReadBuffer(queue, usable_buffer, CL_TRUE, 0, result_count*sizeof(int), usable_pointer, 0, NULL, NULL);
+	size_t ray_count = (spec_rays == nullptr) ? rays.xcoords.size() : spec_rays->size();
+	clraystp.reserve(ray_count);
+	clray.reserve(ray_count);
 
-    clReleaseKernel(kernel);
-    clReleaseMemObject(usable_buffer); // this might change because of moeller trumbore using the same memory space
-    clReleaseMemObject(vpc_buffer);
-    clReleaseMemObject(triangle_buffer);
-    clReleaseMemObject(min_buffer);
-    clReleaseMemObject(max_buffer);
-    clReleaseCommandQueue(queue);
-    clReleaseProgram(program);
-    clReleaseContext(context);
-    return EXIT_SUCCESS;
+	for (size_t i = 0; i < ray_count; ++i) {
+		size_t idx = (spec_rays == nullptr) ? i : (*spec_rays)[i];
+		clraystp.push_back(cl_float4{rays.stpxcoords[idx], rays.stpycoords[idx], rays.stpzcoords[idx], 0.0f});
+		clray.push_back(cl_float4{rays.xcoords[idx], rays.ycoords[idx], rays.zcoords[idx], 0.0f});
+	}
+
+	uint32_t num_triangles = static_cast<uint32_t>(cs->triangles.size() / 3);
+	uint32_t num_rays = static_cast<uint32_t>(clray.size());
+
+	cl::Buffer triangles_buf(demand->context, CL_MEM_READ_ONLY, cs->triangles.size() * sizeof(uint32_t));
+	cl::Buffer points_buf(demand->context, CL_MEM_READ_ONLY, cs->vpc.size() * sizeof(float));
+	cl::Buffer raystp_buf(demand->context, CL_MEM_READ_ONLY, clraystp.size() * sizeof(cl_float4));
+	cl::Buffer ray_buf(demand->context, CL_MEM_READ_ONLY, clray.size() * sizeof(cl_float4));
+	
+	cl_uint zero = 0;
+	cl::Buffer counter_buf(demand->context, CL_MEM_READ_WRITE , sizeof(cl_uint));
+
+	std::vector<MyCL::Hit> traversed(num_triangles * num_rays);
+	cl::Buffer return_data(demand->context, CL_MEM_WRITE_ONLY, traversed.size() * sizeof(MyCL::Hit));
+	
+	err = demand->queue.enqueueWriteBuffer(counter_buf, CL_TRUE, 0,sizeof(cl_uint), &zero);
+	if(err != CL_SUCCESS) std::cout << "counter_buf " << err << std::endl;
+	
+	err = demand->queue.enqueueWriteBuffer(triangles_buf, CL_TRUE, 0, cs->triangles.size() * sizeof(uint32_t), cs->triangles.data());
+	if(err != CL_SUCCESS) std::cout << "triangles_buf " << err << std::endl;
+	err = demand->queue.enqueueWriteBuffer(points_buf, CL_TRUE, 0, cs->vpc.size() * sizeof(float), cs->vpc.data());
+	if(err != CL_SUCCESS) std::cout << "points_buf " << err << std::endl;
+	err = demand->queue.enqueueWriteBuffer(raystp_buf, CL_TRUE, 0, clraystp.size() * sizeof(cl_float4), clraystp.data());
+	if(err != CL_SUCCESS) std::cout << "clraystp " << err << std::endl;
+	err = demand->queue.enqueueWriteBuffer(ray_buf, CL_TRUE, 0, clray.size() * sizeof(cl_float4), clray.data());
+	if(err != CL_SUCCESS) std::cout << "ray " << err << std::endl;
+
+	cl::Kernel BVH = demand->kernel;
+	BVH.setArg(0, triangles_buf);
+	BVH.setArg(1, points_buf);
+	BVH.setArg(2, return_data);
+	BVH.setArg(3, ray_buf);
+	BVH.setArg(4, raystp_buf);
+	BVH.setArg(5, counter_buf);
+	std::cout << "--- HOST BUFFER SANITY CHECK ---" << std::endl;
+	std::cout << "Rays count: " << clray.size() << std::endl;
+	std::cout << "Ray Start [0]: " << clraystp[0].s[0] << ", " << clraystp[0].s[1] << ", " << clraystp[0].s[2] << std::endl;
+	std::cout << "Ray End   [0]: " << clray[0].s[0] << ", " << clray[0].s[1] << ", " << clray[0].s[2] << std::endl;
+
+	std::cout << "Triangles count (indices total): " << cs->triangles.size() << std::endl;
+	if (!cs->triangles.empty()) {
+		std::cout << "First Triangle Indices: " << cs->triangles[0][0] << ", " << cs->triangles[0][1] << ", " << cs->triangles[0][2] << std::endl;
+	}
+
+	std::cout << "Coords count (floats total): " << cs->vpc.size() << std::endl;
+	if (cs->vpc.size() >= 3) {
+		std::cout << "First Point Coord: (" << cs->vpc[0] << ", " << cs->vpc[1] << ", " << cs->vpc[2] << ")" << std::endl;
+	}
+	std::cout << "--------------------------------" << std::endl;
+	err = demand->queue.enqueueNDRangeKernel(BVH, cl::NullRange, cl::NDRange(num_triangles, num_rays), cl::NullRange);
+	if(err != CL_SUCCESS) std::cout << "kernel enqueue  " << err << std::endl;
+
+	cl_uint result_count = 0;
+	err = demand->queue.enqueueReadBuffer(counter_buf, CL_TRUE, 0, sizeof(cl_uint), &result_count);
+	if(err != CL_SUCCESS) std::cout << "result count " << err << std::endl;
+	if (result_count > 0)
+	{
+		traversed.resize(result_count);
+		err = demand->queue.enqueueReadBuffer(return_data, CL_TRUE, 0, result_count * sizeof(MyCL::Hit), traversed.data());
+		if(err != CL_SUCCESS) std::cout << "traversed " << err << std::endl;
+		
+		/*std::sort(traversed.begin(), traversed.end(), [](const MyCL::Hit &a, const MyCL::Hit &b)
+				  {
+			if (a.ray_index != b.ray_index) {
+				return a.ray_index < b.ray_index;
+			}
+			return a.hitpos < b.hitpos; });*/
+	} else {
+		traversed.clear();
+	}
+
+	return traversed;
 }

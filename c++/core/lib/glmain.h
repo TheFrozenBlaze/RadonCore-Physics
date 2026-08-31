@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <array>
 #include "shader.h"
+#include "clfunc.h"
 #include <cstdint>
 class Shader;
 namespace GL

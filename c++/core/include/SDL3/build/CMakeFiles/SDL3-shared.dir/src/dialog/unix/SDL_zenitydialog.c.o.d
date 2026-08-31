@@ -1,7 +1,0 @@
-CMakeFiles/SDL3-shared.dir/src/dialog/unix/SDL_zenitydialog.c.o: \
- /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/dialog/unix/SDL_zenitydialog.c \
- /usr/include/stdc-predef.h \
- /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/SDL_internal.h \
- /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/dialog/unix/../SDL_dialog_utils.h \
- /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/dialog/unix/SDL_zenitydialog.h \
- /home/matyas/Downloads/3Dengine/c++/core/include/SDL3/src/dialog/unix/SDL_zenitymessagebox.h

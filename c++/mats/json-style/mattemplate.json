@@ -1,0 +1,13 @@
+{
+    "format" : "RadonMaterial",
+    "version" : 1, //basically describes how the file should be read, since the program is being developed(current v: 1)
+    "basestate" :
+    {
+        "state" : 0, //in v1: 0 = solid, 1 = liquid, 2 = gas, if none is defined, the prorgram will assume 0
+        "temp": 298.15, //in kelvin
+        "pressure" : 101325, //strictly in pascals
+        "density" : 2700, //kg/m^3
+        "thermal_conduct" : 170 //W/(m*K)
+    }
+    
+}

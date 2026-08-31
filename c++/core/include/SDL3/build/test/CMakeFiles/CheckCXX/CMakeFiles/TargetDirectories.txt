@@ -1,2 +1,0 @@
-/home/matyas/Downloads/3Dengine/c++/core/include/SDL3/build/test/CMakeFiles/CheckCXX/CMakeFiles/edit_cache.dir
-/home/matyas/Downloads/3Dengine/c++/core/include/SDL3/build/test/CMakeFiles/CheckCXX/CMakeFiles/rebuild_cache.dir

@@ -2,22 +2,32 @@
 #define MYIMGUI_H
 
 #include <imgui.h>
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_opengl3.h>
-#include "3dvfunc.h"
+#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_opengl3.h>
+#include <imgui_internal.h>
+#include <imconfig.h>
+#include <imstb_rectpack.h>
+#include <imstb_textedit.h>
+#include <imstb_truetype.h>
+#include <SDL3/SDL.h>
+#include <ctime>
+
 #include "misc.h"
 #include "glmain.h"
 #include "ImGuiFileDialog.h"
-#include <SDL3/SDL.h>
 #include "psettings.h"
-#include "physics.h"
-
+using json = nlohmann::json;
 
 namespace GUI {
-    int SelectProjectPopup();
-    void GUIInit(SDL_Window *context);
-    void MainMenu();
-    void ProjectCast(ProjectDef& def);
-    void SimDetailWindow();
+	int SelectProjectPopup(bool& close);
+	void GUIInit(SDL_Window *context);
+	void MainMenu();
+	int SimDetailWindow();
+	void SimulationResults(std::unique_ptr<MyCL::Basic>& demand);
+	extern bool blockBasicWindowInput;
+	extern bool showSimulationResults;
+	extern size_t lastSim;
+	extern json spec;
 }
+
 #endif

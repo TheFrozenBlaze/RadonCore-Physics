@@ -1,1 +1,0 @@
-/usr/bin/cc -O2 -g -DNDEBUG CMakeFiles/testgl.dir/testgl.c.o -o testgl  -Wl,-rpath,/home/matyas/Downloads/3Dengine/c++/core/include/SDL3/build ../libSDL3_test.a ../libSDL3.so.0.5.0 /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so 

@@ -1,1 +1,0 @@
-/usr/bin/cc -O2 -g -DNDEBUG CMakeFiles/testaudiohotplug.dir/testaudiohotplug.c.o CMakeFiles/sdltests_utils.dir/testutils.c.o -o testaudiohotplug  -Wl,-rpath,/home/matyas/Downloads/3Dengine/c++/core/include/SDL3/build ../libSDL3_test.a ../libSDL3.so.0.5.0 
