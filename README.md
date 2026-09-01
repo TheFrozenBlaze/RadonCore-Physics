@@ -1,30 +1,7 @@
 # RadonCore-Physics
 Our way of trying to help the open source and the linux community.
 
-<<<<<<< HEAD
-Current state: There's a semi-working UI, a basic world, and some rogue opencl kernels.
 
-Bug fixes to be introduced:
-
-Fixing forward travel The whitening behind the select popup
-
-What will come in the next commit(hopefully)? -projects -probably 1 opencl kernel working -forward travel fixed -proper licensing -some support for windows
-=======
-
-Current state:
-There's a semi-working UI, a basic world, and some rogue opencl kernels.
-
-Bug fixes to be introduced:
-
-Fixing forward travel
-The whitening behind the select popup
-
-What will come in the next commit(hopefully)?
--projects
--probably 1 opencl kernel working
--forward travel fixed
--proper licensing
--some support for windows
 # SUDDEN CHANGE
 
 There is a heisenbug in the bvh.cl kernel, that I don't seem to be able to fix. When I add the debug comments, etc, it starts working, but then I can't use the bvh itself.But when I delete the debug, it suddenly doesn't work,and only detects along the y axis, for no reason at all. I've been trying to fix this for the last 4.5 hours, but I didn't find any solutions. Please consider this as a cryout for help.
@@ -54,6 +31,9 @@ Especially because the c++ syntax is supposedly cross platform, and you might be
 Required API-s/ API support:
 OpenCL 1.2
 OpenGL 3.3
+
+
+# OpenCL runtime is a driver and spec based shared library, thus the released(s) don't provide it, you need to install it manually.
 
 # Current state
 
