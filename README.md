@@ -33,7 +33,7 @@ OpenCL 1.2
 OpenGL 3.3
 
 
-# OpenCL runtime is a driver and spec based shared library, thus the release(s) don't provide it, you need to install it manually.
+# OpenCL runtime is a driver and spec based shared library, thus the release(s) doesn't provide it, you need to install it manually.
 
 # Current state
 
