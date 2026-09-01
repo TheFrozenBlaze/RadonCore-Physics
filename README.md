@@ -4,7 +4,9 @@ Our way of trying to help the open source and the linux community.
 
 # SUDDEN CHANGE
 
-There is a heisenbug in the bvh.cl kernel, that I don't seem to be able to fix. When I add the debug comments, etc, it starts working, but then I can't use the bvh itself.But when I delete the debug, it suddenly doesn't work,and only detects along the y axis, for no reason at all. I've been trying to fix this for the last 4.5 hours, but I didn't find any solutions. Please consider this as a cryout for help.
+There is a heisenbug in the bvh.cl kernel, that I don't seem to be able to fix. When I add the debug comments, etc, it starts working, but then I can't use the bvh itself.But when I delete the debug, it suddenly doesn't work,and only detects along the y axis, for no reason at all. I've been trying to fix this for the last 4.5 hours, but I didn't find any solutions. 
+Multiray also has scarce support due to the heisenbug.
+Please consider this as a cryout for help.
 
 # General
 
@@ -12,7 +14,7 @@ This is a physics engine, that's aiming to compete with AnSys' AnSys Motion mult
 building, so more advanced features, finished UI-s, better project sim. And with all of this said, I find it important to mention: please notify me, if you find bugs
 during use, because I might not be able to catch all of them alone.
 The working, and updated branch is the c++ folder, c++ and c# is aiming to be the windows support part! c++ and c# is currently deprecated due to lack of knowledge and 
-demand.
+demand. 
 
 (You'll find instructions to the software in the USE.html)
 
@@ -61,6 +63,6 @@ SDL3
 -materials(large chunk of it is already done, I just need to connect the nodes)
 -a largely working UI with buttons that actually do something
 -an ini for settings
->>>>>>> beta
+-proper multiray support
 
 This currently is a stable version of radon.
