@@ -31,9 +31,11 @@ Especially because the c++ syntax is supposedly cross platform, and you might be
 Required API-s/ API support:
 OpenCL 1.2
 OpenGL 3.3
+SDL3
 
 
 # OpenCL runtime is a driver and spec based shared library, thus the release(s) doesn't provide it, you need to install it manually.
+# In conclusion: it's better to build the project from source with cmake.
 
 # Current state
 
